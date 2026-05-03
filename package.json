@@ -1,6 +1,6 @@
 {
   "name": "ado-epic-budget-table",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "description": "Financial budget planning table for Azure DevOps PMO Epics \u2014 fiscal year \u00d7 quarterly spend, auto-computed KPIs, queryable Epic fields.",
   "author": "Deenu Gengiti",
   "license": "MIT",

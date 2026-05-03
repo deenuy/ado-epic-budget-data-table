@@ -162,7 +162,7 @@ function renderSummary(summary: FinancialSummary) {
         <div class="fin-progress-fill ${ragClass}" style="width:${barPct}%"></div>
       </div>
       <span class="fin-progress-label ${ragClass}">
-        ${hasApproved ? pct.toFixed(1) + "% planned" : "Set Estimated Cost to see % of budget"}
+        ${hasApproved ? pct.toFixed(1) + "% planned" : "Configure an Approved Budget field in control Options to see % of budget"}
       </span>
     </div>
   `;
@@ -172,16 +172,16 @@ function renderSummary(summary: FinancialSummary) {
 function updateFooterTotals(rows: BudgetRow[]) {
   const t = { q1:0, q2:0, q3:0, q4:0 };
   rows.forEach(r => { t.q1+=Number(r.q1)||0; t.q2+=Number(r.q2)||0; t.q3+=Number(r.q3)||0; t.q4+=Number(r.q4)||0; });
-  const grand = t.q1+t.q2+t.q3+t.q4;
   const tfoot = document.querySelector("#gridTable tfoot .totals-row");
   if (!tfoot) return;
+  // Grand total is in the summary banner — footer shows per-quarter totals only
   (tfoot as HTMLElement).innerHTML = `
     <td><strong>TOTALS</strong></td>
     <td class="num-cell"><strong>${fmtCurrency(t.q1)}</strong></td>
     <td class="num-cell"><strong>${fmtCurrency(t.q2)}</strong></td>
     <td class="num-cell"><strong>${fmtCurrency(t.q3)}</strong></td>
     <td class="num-cell"><strong>${fmtCurrency(t.q4)}</strong></td>
-    <td class="num-cell grand-total"><strong>${fmtCurrency(grand)}</strong></td>
+    <td></td>
     <td></td>
   `;
 }
@@ -195,13 +195,10 @@ function nextFiscalYear(rows: BudgetRow[]): string {
   const available = availableFiscalYears(rows);
   if (available.length === 0) return ALL_FISCAL_YEARS[ALL_FISCAL_YEARS.length - 1];
   if (rows.length === 0) return available[0];
-  const used    = rows.map(r => r.fiscalYear).sort((a,b) => ALL_FISCAL_YEARS.indexOf(a) - ALL_FISCAL_YEARS.indexOf(b));
-  const lastUsed = used[used.length - 1];
-  const nextIdx  = ALL_FISCAL_YEARS.indexOf(lastUsed) + 1;
-  if (nextIdx < ALL_FISCAL_YEARS.length && !new Set(rows.map(r=>r.fiscalYear)).has(ALL_FISCAL_YEARS[nextIdx])) {
-    return ALL_FISCAL_YEARS[nextIdx];
-  }
-  return available[0];
+  // Find the highest used FY index and return the next sequential available year
+  const maxUsedIdx = Math.max(...rows.map(r => ALL_FISCAL_YEARS.indexOf(r.fiscalYear)));
+  const nextInSequence = ALL_FISCAL_YEARS.slice(maxUsedIdx + 1).find(fy => available.includes(fy));
+  return nextInSequence ?? available[0];
 }
 
 function buildFYSelect(currentFY: string, usedFYs: Set<string>): string {
@@ -269,7 +266,7 @@ function rebuildFiscalYearDropdowns() {
 function renderTable(initial: BudgetRow[]) {
   suppressDirty = true;
   if ($.fn.dataTable.ext.search.length > 0) $.fn.dataTable.ext.search.length = 0;
-  if (dt) { try { dt.destroy(true); } catch {} dt = null; }
+  if (dt) { try { dt.destroy(false); } catch {} dt = null; }
 
   const sorted = [...initial].sort((a,b) =>
       ALL_FISCAL_YEARS.indexOf(a.fiscalYear) - ALL_FISCAL_YEARS.indexOf(b.fiscalYear)
@@ -280,7 +277,8 @@ function renderTable(initial: BudgetRow[]) {
       data: "fiscalYear", title: "Fiscal Year", width: "120px",
       render: (_d: string, type: string, row: BudgetRow) => {
         if (type !== "display") return row.fiscalYear;
-        const usedFYs = new Set(getRowsFromTable().map(r => r.fiscalYear));
+        // Build usedFYs from known data, not DOM — DOM may not exist yet during initial render
+        const usedFYs = new Set(sorted.map(r => r.fiscalYear));
         return buildFYSelect(row.fiscalYear, usedFYs);
       }
     },
@@ -321,11 +319,16 @@ function renderTable(initial: BudgetRow[]) {
       .on("change.fin","input",() => { if (!suppressDirty) refreshSummary(); })
       .on("click.fin","button.btn-remove", function() {
         dt.row($(this).closest("tr")).remove().draw(false);
-        if (!suppressDirty) { rebuildFiscalYearDropdowns(); markDirty(); refreshSummary(); SDK.resize(); }
+        if (!suppressDirty) { rebuildFiscalYearDropdowns(); markDirty(); refreshSummary(); resizeIframe(); }
       });
 
-  SDK.resize();
+  resizeIframe();
   setTimeout(() => { suppressDirty = false; }, 500);
+}
+
+function resizeIframe() {
+  const h = document.getElementById("app")?.scrollHeight ?? 720;
+  SDK.resize(undefined, h);
 }
 
 async function readApprovedBudget(): Promise<number> {
@@ -351,12 +354,13 @@ async function readApprovedBudget(): Promise<number> {
 
 async function writeComputedFields(summary: FinancialSummary): Promise<void> {
   if (!workItemService) return;
-  const writes: Array<[string|null, number|null]> = [
+  // Always write all three fields — writing 0 clears stale values when approved budget is removed
+  const writes: Array<[string|null, number]> = [
     [config.totalSpentFieldRef,      summary.totalPlannedSpend],
-    [config.budgetRemainingFieldRef, summary.approvedBudget > 0 ? summary.budgetRemaining : null],
-    [config.percentSpentFieldRef,    summary.approvedBudget > 0 ? summary.percentSpent    : null],
+    [config.budgetRemainingFieldRef, summary.budgetRemaining],
+    [config.percentSpentFieldRef,    summary.percentSpent],
   ];
-  const active = writes.filter(([f,v]) => !!f && v !== null) as [string,number][];
+  const active = writes.filter(([f]) => !!f) as [string,number][];
   if (!active.length) return;
   skipFieldChangeOnce += active.length;
   for (const [field, value] of active) {
@@ -375,6 +379,11 @@ async function refreshSummary(): Promise<void> {
 
 let dirtyDebounce: number | undefined;
 
+function flushDirty(): void {
+  window.clearTimeout(dirtyDebounce);
+}
+
+
 function markDirty() {
   if (suppressDirty || !workItemService) return;
   window.clearTimeout(dirtyDebounce);
@@ -387,6 +396,7 @@ function markDirty() {
       const ok = await workItemService!.setFieldValue(config.dataFieldRef, payload);
       lastWrittenPayload = payload;
       setStatus(ok ? "Pending changes..." : "Could not auto-save");
+      // Reuse rows already read above — no second DOM read
       const approved = await readApprovedBudget();
       const summary  = computeFinancials(rows, approved);
       renderSummary(summary);
@@ -398,6 +408,7 @@ function markDirty() {
 
 async function saveToField() {
   if (!workItemService) return;
+  flushDirty(); // Cancel any pending debounce — this save captures current state
   try {
     const rows    = getRowsFromTable();
     const payload = JSON.stringify(rows);
@@ -435,12 +446,14 @@ async function loadFromField(): Promise<void> {
       }
     }
   } catch(e) { log("loadFromField error", e); }
+  // Sort once here so renderTable, summary, and footer all use the same ordered data
+  rows.sort((a,b) => ALL_FISCAL_YEARS.indexOf(a.fiscalYear) - ALL_FISCAL_YEARS.indexOf(b.fiscalYear));
   renderTable(rows);
   const approved = await readApprovedBudget();
   const summary  = computeFinancials(rows, approved);
   renderSummary(summary);
   updateFooterTotals(rows);
-  setTimeout(() => { suppressDirty = false; }, 350);
+  // suppressDirty is released by renderTable's 500ms timer — no competing timer here
 }
 
 function addNewRow() {
@@ -455,14 +468,18 @@ function addNewRow() {
   const nextFY: string = nextFiscalYear(rows);
   dt.row.add({ _id:nextId++, fiscalYear:nextFY, q1:0, q2:0, q3:0, q4:0, notes:"" }).draw(false);
   rebuildFiscalYearDropdowns();
-  SDK.resize();
-  if (!suppressDirty) markDirty();
+  resizeIframe();
+  if (!suppressDirty) {
+    refreshSummary(); // Update footer totals immediately (new row has zero values)
+    markDirty();
+  }
 }
 
 async function probeField(svc: IWorkItemFormService, ref: string): Promise<string | null> {
+  // Only verify the field is readable — no write test to avoid triggering onFieldChanged on load
   const variants = [ref, ref.replace(/Json$/,"JSON"), ref.replace(/JSON$/,"Json")];
   for (const f of variants) {
-    try { const cur = await svc.getFieldValue(f); const ok = await svc.setFieldValue(f, cur); if (ok) return f; } catch {}
+    try { await svc.getFieldValue(f); return f; } catch {}
   }
   return null;
 }
@@ -479,27 +496,60 @@ const provider = () => ({
       document.getElementById("addRowBtn")!.addEventListener("click", addNewRow);
       document.getElementById("saveBtn")!.addEventListener("click", saveToField);
       await loadFromField();
+      resizeIframe();
       setStatus("Ready");
     } catch(e:any) { setStatus("Load error: " + (e?.message ?? String(e))); }
   },
 
   onFieldChanged: async (args: any) => {
     const changed = args?.changedFields ?? {};
-    if (changed[config.dataFieldRef] !== undefined) {
-      if (skipFieldChangeOnce > 0) { skipFieldChangeOnce--; return; }
-      await loadFromField(); return;
-    }
+    if (!Object.keys(changed).length) return;
+
+    // Count and consume all echo fields in this batch first (SDK may batch multiple writes)
     if (skipFieldChangeOnce > 0) {
-      const cf = [config.totalSpentFieldRef, config.budgetRemainingFieldRef, config.percentSpentFieldRef].filter(Boolean);
-      if (cf.some(f => f && changed[f] !== undefined)) { skipFieldChangeOnce--; return; }
+      const echoFields = [
+        config.dataFieldRef,
+        config.totalSpentFieldRef,
+        config.budgetRemainingFieldRef,
+        config.percentSpentFieldRef,
+      ].filter(Boolean) as string[];
+      const echoCount = echoFields.filter(f => changed[f] !== undefined).length;
+      if (echoCount > 0) {
+        skipFieldChangeOnce = Math.max(0, skipFieldChangeOnce - echoCount);
+        // Check if there are any non-echo fields in this batch to process below
+        const hasNonEcho = Object.keys(changed).some(f => !echoFields.includes(f));
+        if (!hasNonEcho) return;
+      }
     }
+
+    // Data field changed by someone else (not our echo) — reload
+    if (changed[config.dataFieldRef] !== undefined && skipFieldChangeOnce === 0) {
+      await loadFromField();
+      return;
+    }
+
+    // Approved budget changed externally — recalculate summary
     if (config.approvedBudgetFieldRef && changed[config.approvedBudgetFieldRef] !== undefined) {
       cachedApprovedBudget = Number(changed[config.approvedBudgetFieldRef]) || 0;
       await refreshSummary();
     }
   },
 
-  onSaved:    async () => { setStatus("Saved"); setTimeout(() => setStatus("Ready"), 3000); },
+  onSaved: async () => {
+    // Flush any pending debounce — work item may have been saved before 400ms elapsed
+    flushDirty();
+    if (workItemService) {
+      const rows    = getRowsFromTable();
+      const payload = JSON.stringify(rows);
+      if (payload !== lastWrittenPayload) {
+        skipFieldChangeOnce++;
+        await workItemService.setFieldValue(config.dataFieldRef, payload);
+        lastWrittenPayload = payload;
+      }
+    }
+    setStatus("Saved");
+    setTimeout(() => { resizeIframe(); setStatus("Ready"); }, 300);
+  },
   onUnloaded: () => {},
 });
 
