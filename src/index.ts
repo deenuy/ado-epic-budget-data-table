@@ -70,12 +70,13 @@ let config: ExtensionConfig = {
   percentSpentFieldRef:    null,
 };
 
-function log(...a: any[]) { if (DEBUG) console.log("[FIN]", ...a); }
+function log(...a: any[])  { if (DEBUG) console.log("[FIN]", ...a); }
+function warn(...a: any[]) { console.warn("[FIN]", ...a); } // Always logs — used for errors that must be visible in prod
 
 function readConfig(): ExtensionConfig {
   const cfg = (SDK.getConfiguration() as any)?.witInputs ?? {};
   return {
-    dataFieldRef:            (cfg.DataFieldRefName ?? cfg.DataFieldRefNameText ?? "Custom.FinancialsTableJson").trim(),
+    dataFieldRef:            (cfg.DataFieldRefName ?? "Custom.FinancialsTableJson").trim(),
     approvedBudgetFieldRef:  cfg.ApprovedBudgetFieldRef?.trim() || null,
     totalSpentFieldRef:      cfg.TotalSpentFieldRef?.trim()     || null,
     budgetRemainingFieldRef: cfg.BudgetRemainingFieldRef?.trim() || null,
@@ -341,13 +342,19 @@ async function readApprovedBudget(): Promise<number> {
   for (const candidate of candidates) {
     try {
       const val = await workItemService.getFieldValue(candidate);
-      const n   = Number(val);
+      // Explicit null/undefined/empty guard — Number(null)=0 passes !isNaN,
+      // which would silently treat an unset field as $0 approved budget
+      if (val === null || val === undefined || val === "") {
+        log("readApprovedBudget: field empty for", candidate, "— skipping");
+        continue;
+      }
+      const n = Number(val);
       if (!isNaN(n)) {
         log("readApprovedBudget:", candidate, "=", n);
         cachedApprovedBudget = n;
         return n;
       }
-    } catch { log("readApprovedBudget failed for:", candidate); }
+    } catch(e) { warn("readApprovedBudget: getFieldValue failed for:", candidate, e); }
   }
   return cachedApprovedBudget;
 }
@@ -365,7 +372,7 @@ async function writeComputedFields(summary: FinancialSummary): Promise<void> {
   skipFieldChangeOnce += active.length;
   for (const [field, value] of active) {
     try { await workItemService.setFieldValue(field, value); }
-    catch(e) { log(`writeComputedFields failed for ${field}:`, e); }
+    catch(e) { warn(`writeComputedFields failed for ${field}:`, e); }
   }
 }
 
@@ -493,6 +500,18 @@ const provider = () => ({
       const resolved  = await probeField(workItemService, config.dataFieldRef);
       if (resolved) { config.dataFieldRef = resolved; }
       else { setStatus(`Field not writable: ${config.dataFieldRef}`); }
+
+      // Probe approved budget field — warn if unreadable so user can diagnose
+      if (config.approvedBudgetFieldRef) {
+        try {
+          await workItemService.getFieldValue(config.approvedBudgetFieldRef);
+        } catch(e) {
+          warn("Approved Budget field unreadable:", config.approvedBudgetFieldRef, e);
+          setStatus(`Cannot read Approved Budget field: ${config.approvedBudgetFieldRef}`);
+          // Keep the ref — do not null it, allows retry on next interaction
+        }
+      }
+
       document.getElementById("addRowBtn")!.addEventListener("click", addNewRow);
       document.getElementById("saveBtn")!.addEventListener("click", saveToField);
       await loadFromField();
