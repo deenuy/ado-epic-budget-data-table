@@ -333,29 +333,38 @@ function resizeIframe() {
 }
 
 async function readApprovedBudget(): Promise<number> {
-  if (!workItemService || !config.approvedBudgetFieldRef) return cachedApprovedBudget;
-  const ref = config.approvedBudgetFieldRef;
+  if (!workItemService) return cachedApprovedBudget;
+
+  // Build candidate list: configured field first, then known fallbacks.
+  // Following Microsoft's pattern — getFieldValue with known reference name strings.
+  // Fallbacks handle the case where Options panel config is null or holds wrong name.
+  // Use configured ref if set, otherwise fall back to Custom.EstimatedBudget
   const candidates = Array.from(new Set([
-    ref,
-    ref.startsWith("Custom.") ? ref : `Custom.${ref}`,
+    config.approvedBudgetFieldRef ?? "Custom.EstimatedBudget",
   ]));
+
   for (const candidate of candidates) {
     try {
       const val = await workItemService.getFieldValue(candidate);
-      // Explicit null/undefined/empty guard — Number(null)=0 passes !isNaN,
-      // which would silently treat an unset field as $0 approved budget
+      // Explicit null/undefined/empty guard — Number(null)=0 passes !isNaN
       if (val === null || val === undefined || val === "") {
-        log("readApprovedBudget: field empty for", candidate, "— skipping");
+        log("readApprovedBudget: empty for", candidate);
         continue;
       }
       const n = Number(val);
       if (!isNaN(n)) {
-        log("readApprovedBudget:", candidate, "=", n);
+        log("readApprovedBudget: resolved", candidate, "=", n);
         cachedApprovedBudget = n;
+        // Lock in the working ref for future calls in this session
+        config.approvedBudgetFieldRef = candidate;
         return n;
       }
-    } catch(e) { warn("readApprovedBudget: getFieldValue failed for:", candidate, e); }
+    } catch {
+      // Field does not exist on this WIT — try next candidate silently
+    }
   }
+
+  warn("readApprovedBudget: no candidate returned a value. Tried:", candidates.join(", "));
   return cachedApprovedBudget;
 }
 
@@ -497,6 +506,15 @@ const provider = () => ({
       setStatus("Loading...");
       config          = readConfig();
       workItemService = await SDK.getService<IWorkItemFormService>(WorkItemTrackingServiceIds.WorkItemFormService);
+      // Diagnostic: log all numeric fields so the exact ref name is visible in console
+      try {
+        const allFields = await workItemService.getFields();
+        const numericFields = (allFields as any[])
+            .filter(f => f.type === 2 || f.type === 1) // Double=2, Integer=1
+            .map(f => `${f.referenceName} ("${f.name}")`);
+        warn("Numeric fields on this WIT:", numericFields.join(" | "));
+      } catch(e) { log("getFields diagnostic failed:", e); }
+
       const resolved  = await probeField(workItemService, config.dataFieldRef);
       if (resolved) { config.dataFieldRef = resolved; }
       else { setStatus(`Field not writable: ${config.dataFieldRef}`); }

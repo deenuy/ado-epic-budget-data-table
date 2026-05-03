@@ -3,7 +3,7 @@
   "manifestVersion": 1,
   "id": "ado-epic-budget-data-table",
   "publisher": "deenuy",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "name": "ADO Epic Budget Table",
   "description": "Budget planning table for PMO Epics. Track spend by Fiscal Year and Quarter (Q1-Q4). Auto-computes KPIs and writes back to queryable Epic fields.",
   "public": true,
