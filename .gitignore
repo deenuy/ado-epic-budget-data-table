@@ -1,6 +1,9 @@
 # Node
 node_modules/
 npm-debug.log*
+.idea
+archive
+ado-epic-budget-data-table.iml
 
 # Build output — never commit generated files
 dist/
