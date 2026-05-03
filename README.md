@@ -4,13 +4,13 @@
 
 **Financial budget planning built directly into Azure DevOps Epic work items.**
 
-[![VS Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/deenuy.ado-epic-budget-data-table-control?label=Marketplace&color=0078d4)](https://marketplace.visualstudio.com/items?itemName=deenuy.ado-epic-budget-data-table-control)
+[![VS Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/deenuy.ado-epic-budget-data-table?label=Marketplace&color=0078d4)](https://marketplace.visualstudio.com/items?itemName=deenuy.ado-epic-budget-data-table)
 [![GitHub Stars](https://img.shields.io/github/stars/deenuy/ado-epic-budget-data-table?style=flat&color=ffd700)](https://github.com/deenuy/ado-epic-budget-data-table/stargazers)
 [![Build](https://github.com/deenuy/ado-epic-budget-data-table/actions/workflows/ci.yml/badge.svg)](https://github.com/deenuy/ado-epic-budget-data-table/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-[**Install from Marketplace**](https://marketplace.visualstudio.com/items?itemName=deenuy.ado-epic-budget-data-table-control) · [**Quick Start**](#quick-start) · [**Contribute**](CONTRIBUTING.md)
+[**Install from Marketplace**](https://marketplace.visualstudio.com/items?itemName=deenuy.ado-epic-budget-data-table) · [**Quick Start**](#quick-start) · [**Contribute**](CONTRIBUTING.md)
 
 </div>
 
@@ -42,7 +42,7 @@ This extension puts a full budget planning table **directly on the Epic's Budget
 
 ### 1 - Install the extension
 
-Install from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=deenuy.ado-epic-budget-data-table-control).
+Install from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=deenuy.ado-epic-budget-data-table).
 
 ### 2 - Create Epic fields
 
@@ -146,7 +146,7 @@ Built by **Deenu Gengiti** -
 
 If this saves your team time:
 - Star this repo - helps others find it
-- Leave a review on the [VS Marketplace](https://marketplace.visualstudio.com/items?itemName=deenuy.ado-epic-budget-data-table-control)
+- Leave a review on the [VS Marketplace](https://marketplace.visualstudio.com/items?itemName=deenuy.ado-epic-budget-data-table)
 - File issues - every bug report makes the extension better
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://linkedin.com/in/deenuy)
