@@ -1,0 +1,321 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Financial Budget Table — Azure DevOps Work Item Form Control
+   Light / dark aware via CSS custom properties
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --az-font:         system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  --az-font-size:    13px;
+  --az-radius:       4px;
+
+  --az-bg:           #ffffff;
+  --az-surface:      #ffffff;
+  --az-text:         #242424;
+  --az-muted:        #616161;
+  --az-border:       #e1e1e1;
+  --az-hover:        #f3f2f1;
+  --az-primary:      #0078d4;
+  --az-primary-hover:#106ebe;
+  --az-danger:       #c50f1f;
+
+  --rag-green:       #107c10;
+  --rag-amber:       #ca5010;
+  --rag-red:         #c50f1f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --az-bg:           #1f1f1f;
+    --az-surface:      #2b2b2b;
+    --az-text:         #f3f3f3;
+    --az-muted:        #b5b5b5;
+    --az-border:       #3a3a3a;
+    --az-hover:        #313131;
+    --az-primary:      #3aa0ff;
+    --az-primary-hover:#2895ff;
+  }
+}
+
+html, body { background: transparent; margin: 0; padding: 0; }
+
+/* ── Card shell ── */
+.azdo-card {
+  font-family:  var(--az-font);
+  font-size:    var(--az-font-size);
+  color:        var(--az-text);
+  background:   var(--az-surface);
+  border-radius:var(--az-radius);
+  padding:      8px 10px;
+}
+
+/* ── Header / toolbar ── */
+.azdo-card-header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             12px;
+  margin-bottom:   8px;
+}
+.azdo-title {
+  margin: 0;
+  font-size:   15px;
+  font-weight: 600;
+}
+.azdo-toolbar {
+  display:     flex;
+  align-items: center;
+  gap:         8px;
+}
+
+/* ── Buttons ── */
+.azdo-btn {
+  display:      inline-flex;
+  align-items:  center;
+  gap:          6px;
+  height:       28px;
+  padding:      0 10px;
+  border:       1px solid var(--az-border);
+  border-radius:var(--az-radius);
+  background:   var(--az-bg);
+  color:        var(--az-text);
+  font-size:    12px;
+  cursor:       pointer;
+  white-space:  nowrap;
+}
+.azdo-btn:hover  { background: var(--az-hover); }
+.azdo-btn:focus  { outline: 2px solid var(--az-primary); outline-offset: 1px; }
+
+.azdo-btn-primary {
+  background:   var(--az-primary);
+  border-color: var(--az-primary);
+  color: #fff;
+}
+.azdo-btn-primary:hover {
+  background:   var(--az-primary-hover);
+  border-color: var(--az-primary-hover);
+}
+
+.bowtie-icon { font-size: 14px; }
+
+/* ── Status bar ── */
+.azdo-status {
+  color:       var(--az-muted);
+  font-size:   12px;
+  user-select: none;
+}
+
+/* ══════════════════════════════════════════════════════
+   FINANCIAL SUMMARY BANNER
+   ══════════════════════════════════════════════════════ */
+.fin-summary {
+  display:       flex;
+  flex-wrap:     wrap;
+  align-items:   flex-start;
+  gap:           20px;
+  padding:       10px 14px;
+  margin-bottom: 10px;
+  background:    var(--az-hover);
+  border:        1px solid var(--az-border);
+  border-radius: var(--az-radius);
+}
+
+.fin-metric {
+  display:        flex;
+  flex-direction: column;
+  min-width:      120px;
+}
+
+.fin-label {
+  font-size:      10px;
+  font-weight:    600;
+  color:          var(--az-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom:  2px;
+}
+
+.fin-value {
+  font-size:   20px;
+  font-weight: 600;
+  color:       var(--az-text);
+  line-height: 1.2;
+}
+
+/* RAG status colors */
+.rag-green .fin-value { color: var(--rag-green); }
+.rag-amber .fin-value { color: var(--rag-amber); }
+.rag-red   .fin-value, .rag-red   { color: var(--rag-red); }
+
+/* Progress bar */
+.fin-progress-wrap {
+  flex-basis:  100%;
+  display:     flex;
+  align-items: center;
+  gap:         10px;
+  margin-top:  4px;
+}
+.fin-progress-bar {
+  flex:          1;
+  height:        8px;
+  background:    var(--az-border);
+  border-radius: 4px;
+  overflow:      hidden;
+}
+.fin-progress-fill {
+  height:        100%;
+  border-radius: 4px;
+  transition:    width 0.4s ease;
+}
+.fin-progress-fill.rag-green { background: var(--rag-green); }
+.fin-progress-fill.rag-amber { background: var(--rag-amber); }
+.fin-progress-fill.rag-red   { background: var(--rag-red);   }
+
+.fin-progress-label {
+  font-size:   11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.fin-progress-label.rag-green { color: var(--rag-green); }
+.fin-progress-label.rag-amber { color: var(--rag-amber); }
+.fin-progress-label.rag-red   { color: var(--rag-red);   }
+
+/* ══════════════════════════════════════════════════════
+   TABLE
+   ══════════════════════════════════════════════════════ */
+.azdo-table-wrap {
+  border:        1px solid var(--az-border);
+  border-radius: var(--az-radius);
+  overflow:      hidden;
+}
+
+/* Header */
+.azdo-table.dataTable thead th {
+  background:    var(--az-surface);
+  border-bottom: 1px solid var(--az-border) !important;
+  color:         var(--az-text);
+  font-weight:   600;
+  padding:       6px 8px !important;
+  cursor:        pointer;
+  white-space:   nowrap;
+}
+.azdo-table.dataTable thead th:last-child { cursor: default; }
+
+/* Body rows */
+.azdo-table.dataTable tbody td {
+  border-top:     1px solid var(--az-border) !important;
+  padding:        5px 8px !important;
+  vertical-align: middle;
+}
+.azdo-table.dataTable tbody tr:hover td { background: var(--az-hover); }
+.azdo-table.dataTable.no-footer { border-bottom: 0; }
+
+/* ── Footer totals ── */
+#gridTable tfoot .totals-row td {
+  background:    var(--az-hover);
+  border-top:    2px solid var(--az-primary) !important;
+  padding:       6px 8px !important;
+  font-size:     12px;
+}
+.num-cell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.grand-total {
+  color: var(--az-primary);
+}
+
+/* ── Cell inputs ── */
+#gridTable input[type="text"],
+#gridTable input[type="number"],
+#gridTable select {
+  width:        100%;
+  height:       26px;
+  border:       1px solid var(--az-border);
+  border-radius:3px;
+  background:   var(--az-bg);
+  color:        var(--az-text);
+  padding:      3px 6px;
+  box-sizing:   border-box;
+  font-size:    12px;
+  font-family:  var(--az-font);
+}
+#gridTable input[type="text"]:focus,
+#gridTable input[type="number"]:focus,
+#gridTable select:focus {
+  outline:    none;
+  border-color: var(--az-primary);
+  box-shadow: 0 0 0 1px var(--az-primary);
+}
+
+/* Number inputs: right-align, monospace */
+#gridTable .num-input {
+  text-align:     right;
+  font-variant-numeric: tabular-nums;
+}
+
+#gridTable select { cursor: pointer; }
+
+/* Delete button */
+#gridTable .btn-remove {
+  background:   var(--az-danger);
+  border-color: var(--az-danger);
+  color:        #fff;
+  font-size:    11px;
+  padding:      2px 8px;
+  height:       24px;
+}
+#gridTable .btn-remove:hover {
+  background:   #a80e1f;
+  border-color: #a80e1f;
+}
+
+/* ── DataTables pagination / info controls ── */
+.dataTables_wrapper .dataTables_length,
+.dataTables_wrapper .dataTables_info,
+.dataTables_wrapper .dataTables_paginate {
+  color:     var(--az-muted);
+  font-size: 11px;
+  margin:    6px 0;
+}
+.dataTables_wrapper .dataTables_length { float: left;  }
+.dataTables_wrapper .dataTables_paginate { float: right; }
+.dataTables_wrapper .dataTables_info    { clear: both; padding-top: 4px; }
+
+.dataTables_wrapper .dataTables_length select {
+  border:        1px solid var(--az-border);
+  border-radius: var(--az-radius);
+  background:    var(--az-bg);
+  color:         var(--az-text);
+  padding:       2px 4px;
+  font-size:     11px;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+  border:        1px solid var(--az-border);
+  border-radius: var(--az-radius);
+  background:    var(--az-bg);
+  color:         var(--az-text) !important;
+  padding:       3px 7px;
+  margin:        0 2px;
+  cursor:        pointer;
+  font-size:     11px;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+  background: var(--az-hover) !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+  background:   var(--az-primary) !important;
+  border-color: var(--az-primary);
+  color: #fff !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+  opacity: 0.4;
+  cursor:  not-allowed;
+}
+
+/* Clearfix */
+.dataTables_wrapper::after {
+  content: "";
+  display: block;
+  clear:   both;
+}
