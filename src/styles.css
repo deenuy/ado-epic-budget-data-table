@@ -1,316 +1,343 @@
 /* ═══════════════════════════════════════════════════════════════════════════
-   Financial Budget Table — Azure DevOps Work Item Form Control
-   Light / dark aware via CSS custom properties
+   ADO Epic Budget Table — styles.css
+   Azure DevOps light / dark theme via CSS custom properties
+   Design tokens sourced from Microsoft Formula Design System
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ── Design tokens ─────────────────────────────────────────────────────── */
 :root {
-  --az-font:         system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  --az-font-size:    13px;
-  --az-radius:       4px;
+  --az-font:          "Segoe UI", system-ui, -apple-system, sans-serif;
+  --az-font-size:     13px;
+  --az-line-height:   20px;
+  --az-radius-sm:     2px;
+  --az-radius-md:     4px;
 
-  --az-bg:           #ffffff;
-  --az-surface:      #ffffff;
-  --az-text:         #242424;
-  --az-muted:        #616161;
-  --az-border:       #e1e1e1;
-  --az-hover:        #f3f2f1;
-  --az-primary:      #0078d4;
-  --az-primary-hover:#106ebe;
-  --az-danger:       #c50f1f;
+  --az-bg:            #ffffff;
+  --az-surface:       #ffffff;
+  --az-text:          #323130;
+  --az-text-strong:   #201f1e;
+  --az-muted:         #605e5c;
+  --az-border:        #d2d0ce;
+  --az-border-strong: #8a8886;
+  --az-hover:         #f3f2f1;
+  --az-selected:      #edebe9;
 
-  --rag-green:       #107c10;
-  --rag-amber:       #ca5010;
-  --rag-red:         #c50f1f;
+  --az-primary:       #0078d4;
+  --az-primary-hover: #106ebe;
+  --az-primary-dark:  #005a9e;
+
+  --az-danger:        #c50f1f;
+  --az-danger-hover:  #a80e1a;
+  --rag-green:        #107c10;
+  --rag-amber:        #ca5010;
+  --rag-red:          #c50f1f;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --az-bg:           #1f1f1f;
-    --az-surface:      #2b2b2b;
-    --az-text:         #f3f3f3;
-    --az-muted:        #b5b5b5;
-    --az-border:       #3a3a3a;
-    --az-hover:        #313131;
-    --az-primary:      #3aa0ff;
-    --az-primary-hover:#2895ff;
+    --az-bg:            #1b1a19;
+    --az-surface:       #252423;
+    --az-text:          #f3f2f1;
+    --az-text-strong:   #ffffff;
+    --az-muted:         #c8c6c4;
+    --az-border:        #3b3a39;
+    --az-border-strong: #605e5c;
+    --az-hover:         #323130;
+    --az-selected:      #3b3a39;
+    --az-primary:       #479ef5;
+    --az-primary-hover: #62abf5;
+    --az-primary-dark:  #2899f5;
   }
 }
 
-html, body { background: transparent; margin: 0; padding: 0; }
-
-/* ── Card shell ── */
-.azdo-card {
-  font-family:  var(--az-font);
-  font-size:    var(--az-font-size);
-  color:        var(--az-text);
-  background:   var(--az-surface);
-  border-radius:var(--az-radius);
-  padding:      8px 10px;
+/* ── Reset ──────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html, body {
+  background:  transparent;
+  margin:      0;
+  padding:     0;
+  font-family: var(--az-font);
+  font-size:   var(--az-font-size);
 }
 
-/* ── Header / toolbar ── */
+/* ── Card shell ─────────────────────────────────────────────────────────── */
+.azdo-card {
+  font-family: var(--az-font);
+  font-size:   var(--az-font-size);
+  line-height: var(--az-line-height);
+  color:       var(--az-text);
+  background:  var(--az-surface);
+  padding:     12px 16px 16px;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
 .azdo-card-header {
   display:         flex;
   align-items:     center;
   justify-content: space-between;
   gap:             12px;
-  margin-bottom:   8px;
+  margin-bottom:   12px;
+  padding-bottom:  8px;
+  border-bottom:   1px solid var(--az-border);
 }
+
 .azdo-title {
-  margin: 0;
-  font-size:   15px;
-  font-weight: 600;
+  margin:         0;
+  font-size:      14px;
+  font-weight:    600;
+  color:          var(--az-text-strong);
+  letter-spacing: -0.01em;
 }
+
 .azdo-toolbar {
   display:     flex;
   align-items: center;
-  gap:         8px;
+  gap:         6px;
 }
 
-/* ── Buttons ── */
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
 .azdo-btn {
-  display:      inline-flex;
-  align-items:  center;
-  gap:          6px;
-  height:       28px;
-  padding:      0 10px;
-  border:       1px solid var(--az-border);
-  border-radius:var(--az-radius);
-  background:   var(--az-bg);
-  color:        var(--az-text);
-  font-size:    12px;
-  cursor:       pointer;
-  white-space:  nowrap;
+  display:       inline-flex;
+  align-items:   center;
+  gap:           4px;
+  height:        28px;
+  padding:       0 8px;
+  border:        1px solid var(--az-border);
+  border-radius: var(--az-radius-sm);
+  background:    var(--az-bg);
+  color:         var(--az-text);
+  font-family:   var(--az-font);
+  font-size:     13px;
+  font-weight:   400;
+  cursor:        pointer;
+  white-space:   nowrap;
+  line-height:   1;
+  transition:    background 80ms, border-color 80ms;
 }
-.azdo-btn:hover  { background: var(--az-hover); }
-.azdo-btn:focus  { outline: 2px solid var(--az-primary); outline-offset: 1px; }
+.azdo-btn:hover       { background: var(--az-hover); border-color: var(--az-border-strong); }
+.azdo-btn:active      { background: var(--az-selected); }
+.azdo-btn:focus-visible { outline: 1px solid var(--az-primary); outline-offset: 0; }
 
 .azdo-btn-primary {
   background:   var(--az-primary);
   border-color: var(--az-primary);
-  color: #fff;
+  color:        #fff;
+  font-weight:  600;
 }
-.azdo-btn-primary:hover {
-  background:   var(--az-primary-hover);
-  border-color: var(--az-primary-hover);
-}
+.azdo-btn-primary:hover  { background: var(--az-primary-hover); border-color: var(--az-primary-hover); }
+.azdo-btn-primary:active { background: var(--az-primary-dark); }
 
-.bowtie-icon { font-size: 14px; }
+.bowtie-icon { font-size: 16px; line-height: 1; flex-shrink: 0; }
 
-/* ── Status bar ── */
+/* ── Status bar ─────────────────────────────────────────────────────────── */
 .azdo-status {
-  color:       var(--az-muted);
   font-size:   12px;
+  color:       var(--az-muted);
   user-select: none;
 }
 
-/* ══════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════════
    FINANCIAL SUMMARY BANNER
-   ══════════════════════════════════════════════════════ */
+   ══════════════════════════════════════════════════════════════════════════ */
 .fin-summary {
-  display:       flex;
-  flex-wrap:     wrap;
-  align-items:   flex-start;
-  gap:           20px;
-  padding:       10px 14px;
-  margin-bottom: 10px;
-  background:    var(--az-hover);
-  border:        1px solid var(--az-border);
-  border-radius: var(--az-radius);
+  display:        flex;
+  flex-wrap:      wrap;
+  align-items:    flex-start;
+  gap:            0;
+  padding:        12px 0 10px;
+  margin-bottom:  12px;
+  background:     var(--az-hover);
+  border:         1px solid var(--az-border);
+  border-radius:  var(--az-radius-md);
+  overflow:       hidden;
 }
 
 .fin-metric {
   display:        flex;
   flex-direction: column;
-  min-width:      120px;
+  padding:        4px 20px 4px 16px;
+  border-right:   1px solid var(--az-border);
+  min-width:      130px;
 }
+.fin-metric:last-of-type { border-right: none; }
 
 .fin-label {
-  font-size:      10px;
+  font-size:      11px;
   font-weight:    600;
   color:          var(--az-muted);
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  margin-bottom:  2px;
+  letter-spacing: 0.5px;
+  margin-bottom:  3px;
+  white-space:    nowrap;
 }
 
 .fin-value {
-  font-size:   20px;
-  font-weight: 600;
-  color:       var(--az-text);
-  line-height: 1.2;
+  font-size:           18px;
+  font-weight:         600;
+  color:               var(--az-text-strong);
+  line-height:         1.15;
+  font-variant-numeric: tabular-nums;
 }
 
-/* RAG status colors */
-.rag-green .fin-value { color: var(--rag-green); }
-.rag-amber .fin-value { color: var(--rag-amber); }
-.rag-red   .fin-value, .rag-red   { color: var(--rag-red); }
+/* RAG coloring */
+.fin-metric.rag-green .fin-value { color: var(--rag-green); }
+.fin-metric.rag-amber .fin-value { color: var(--rag-amber); }
+.fin-metric.rag-red   .fin-value { color: var(--rag-red);   }
+.rag-red                          { color: var(--rag-red);   }
 
-/* Progress bar */
+/* Progress bar row */
 .fin-progress-wrap {
-  flex-basis:  100%;
-  display:     flex;
-  align-items: center;
-  gap:         10px;
-  margin-top:  4px;
+  flex-basis:   100%;
+  display:      flex;
+  align-items:  center;
+  gap:          10px;
+  padding:      8px 16px 4px;
+  border-top:   1px solid var(--az-border);
+  margin-top:   8px;
 }
 .fin-progress-bar {
   flex:          1;
-  height:        8px;
+  height:        4px;
   background:    var(--az-border);
-  border-radius: 4px;
+  border-radius: 2px;
   overflow:      hidden;
 }
 .fin-progress-fill {
   height:        100%;
-  border-radius: 4px;
-  transition:    width 0.4s ease;
+  border-radius: 2px;
+  transition:    width 0.3s ease;
 }
 .fin-progress-fill.rag-green { background: var(--rag-green); }
 .fin-progress-fill.rag-amber { background: var(--rag-amber); }
 .fin-progress-fill.rag-red   { background: var(--rag-red);   }
 
 .fin-progress-label {
-  font-size:   11px;
+  font-size:   12px;
   font-weight: 600;
   white-space: nowrap;
+  min-width:   220px;
+  text-align:  right;
 }
 .fin-progress-label.rag-green { color: var(--rag-green); }
 .fin-progress-label.rag-amber { color: var(--rag-amber); }
 .fin-progress-label.rag-red   { color: var(--rag-red);   }
 
-/* ══════════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════════════════════════
    TABLE
-   ══════════════════════════════════════════════════════ */
+   ══════════════════════════════════════════════════════════════════════════ */
 .azdo-table-wrap {
   border:        1px solid var(--az-border);
-  border-radius: var(--az-radius);
-  overflow:      hidden;
+  border-radius: var(--az-radius-md);
+  overflow:      visible;
 }
 
-/* Header */
+.dataTables_wrapper {
+  width: 100%;
+}
+
+/* Remove any DataTables internal scroll constraints */
+.dataTables_scrollBody {
+  overflow-y: visible !important;
+  height:     auto   !important;
+  max-height: none   !important;
+}
+
+/* ── Column headers ── */
 .azdo-table.dataTable thead th {
-  background:    var(--az-surface);
+  background:    var(--az-hover);
   border-bottom: 1px solid var(--az-border) !important;
   color:         var(--az-text);
+  font-size:     12px;
   font-weight:   600;
-  padding:       6px 8px !important;
-  cursor:        pointer;
+  padding:       7px 8px !important;
   white-space:   nowrap;
+  user-select:   none;
+  cursor:        default;
 }
-.azdo-table.dataTable thead th:last-child { cursor: default; }
 
-/* Body rows */
+/* ── Body rows ── */
 .azdo-table.dataTable tbody td {
   border-top:     1px solid var(--az-border) !important;
-  padding:        5px 8px !important;
+  padding:        4px 8px !important;
   vertical-align: middle;
+  font-size:      13px;
+  color:          var(--az-text);
 }
-.azdo-table.dataTable tbody tr:hover td { background: var(--az-hover); }
-.azdo-table.dataTable.no-footer { border-bottom: 0; }
+.azdo-table.dataTable tbody tr:hover > td         { background: var(--az-hover); }
+.azdo-table.dataTable tbody tr:hover > td input,
+.azdo-table.dataTable tbody tr:hover > td select  { background: var(--az-bg); }
+.azdo-table.dataTable.no-footer                   { border-bottom: 0; }
 
 /* ── Footer totals ── */
 #gridTable tfoot .totals-row td {
-  background:    var(--az-hover);
-  border-top:    2px solid var(--az-primary) !important;
-  padding:       6px 8px !important;
-  font-size:     12px;
+  background:  var(--az-selected);
+  border-top:  2px solid var(--az-primary) !important;
+  padding:     6px 8px !important;
+  font-size:   12px;
+  font-weight: 600;
+  color:       var(--az-text-strong);
 }
 .num-cell {
-  text-align: right;
+  text-align:           right;
   font-variant-numeric: tabular-nums;
 }
-.grand-total {
-  color: var(--az-primary);
-}
+.grand-total { color: var(--az-primary); }
 
 /* ── Cell inputs ── */
 #gridTable input[type="text"],
 #gridTable input[type="number"],
 #gridTable select {
-  width:        100%;
-  height:       26px;
-  border:       1px solid var(--az-border);
-  border-radius:3px;
-  background:   var(--az-bg);
-  color:        var(--az-text);
-  padding:      3px 6px;
-  box-sizing:   border-box;
-  font-size:    12px;
-  font-family:  var(--az-font);
+  width:         100%;
+  height:        24px;
+  border:        1px solid var(--az-border);
+  border-radius: var(--az-radius-sm);
+  background:    var(--az-bg);
+  color:         var(--az-text);
+  padding:       0 6px;
+  font-family:   var(--az-font);
+  font-size:     13px;
+  line-height:   22px;
+  transition:    border-color 80ms;
 }
+#gridTable input[type="text"]:hover,
+#gridTable input[type="number"]:hover,
+#gridTable select:hover   { border-color: var(--az-border-strong); }
 #gridTable input[type="text"]:focus,
 #gridTable input[type="number"]:focus,
-#gridTable select:focus {
-  outline:    none;
-  border-color: var(--az-primary);
-  box-shadow: 0 0 0 1px var(--az-primary);
-}
+#gridTable select:focus   { outline: none; border-color: var(--az-primary); }
 
-/* Number inputs: right-align, monospace */
 #gridTable .num-input {
-  text-align:     right;
+  text-align:           right;
   font-variant-numeric: tabular-nums;
+  padding-right:        4px;
 }
 
 #gridTable select { cursor: pointer; }
 
-/* Delete button */
+/* ── Delete button ── */
 #gridTable .btn-remove {
-  background:   var(--az-danger);
-  border-color: var(--az-danger);
-  color:        #fff;
-  font-size:    11px;
-  padding:      2px 8px;
-  height:       24px;
+  height:        24px;
+  padding:       0 8px;
+  font-size:     12px;
+  font-family:   var(--az-font);
+  border-radius: var(--az-radius-sm);
+  background:    transparent;
+  border:        1px solid var(--az-border);
+  color:         var(--az-danger);
+  cursor:        pointer;
+  white-space:   nowrap;
+  transition:    background 80ms, border-color 80ms;
 }
-#gridTable .btn-remove:hover {
-  background:   #a80e1f;
-  border-color: #a80e1f;
+#gridTable .btn-remove:hover { background: #fde7e9; border-color: var(--az-danger); }
+@media (prefers-color-scheme: dark) {
+  #gridTable .btn-remove:hover { background: rgba(197,15,31,0.15); }
 }
 
-/* ── DataTables pagination / info controls ── */
+/* ── DataTables pagination / info — hidden since paging:false ── */
 .dataTables_wrapper .dataTables_length,
 .dataTables_wrapper .dataTables_info,
 .dataTables_wrapper .dataTables_paginate {
-  color:     var(--az-muted);
-  font-size: 11px;
-  margin:    6px 0;
-}
-.dataTables_wrapper .dataTables_length { float: left;  }
-.dataTables_wrapper .dataTables_paginate { float: right; }
-.dataTables_wrapper .dataTables_info    { clear: both; padding-top: 4px; }
-
-.dataTables_wrapper .dataTables_length select {
-  border:        1px solid var(--az-border);
-  border-radius: var(--az-radius);
-  background:    var(--az-bg);
-  color:         var(--az-text);
-  padding:       2px 4px;
-  font-size:     11px;
-}
-
-.dataTables_wrapper .dataTables_paginate .paginate_button {
-  border:        1px solid var(--az-border);
-  border-radius: var(--az-radius);
-  background:    var(--az-bg);
-  color:         var(--az-text) !important;
-  padding:       3px 7px;
-  margin:        0 2px;
-  cursor:        pointer;
-  font-size:     11px;
-}
-.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-  background: var(--az-hover) !important;
-}
-.dataTables_wrapper .dataTables_paginate .paginate_button.current {
-  background:   var(--az-primary) !important;
-  border-color: var(--az-primary);
-  color: #fff !important;
-}
-.dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
-  opacity: 0.4;
-  cursor:  not-allowed;
+  display: none;
 }
 
 /* Clearfix */
