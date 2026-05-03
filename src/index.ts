@@ -141,7 +141,7 @@ function renderSummary(summary: FinancialSummary) {
 
   el.innerHTML = `
     <div class="fin-metric">
-      <span class="fin-label">Approved Budget</span>
+      <span class="fin-label">Estimated Cost</span>
       <span class="fin-value">${hasApproved ? fmtCurrency(summary.approvedBudget) : "Not set"}</span>
     </div>
     <div class="fin-metric">
@@ -163,7 +163,7 @@ function renderSummary(summary: FinancialSummary) {
         <div class="fin-progress-fill ${ragClass}" style="width:${barPct}%"></div>
       </div>
       <span class="fin-progress-label ${ragClass}">
-        ${hasApproved ? pct.toFixed(1) + "% planned" : "Configure an Approved Budget field in control Options to see % of budget"}
+        ${hasApproved ? pct.toFixed(1) + "% planned" : "Configure Estimated Cost field in control Options to see % of budget"}
       </span>
     </div>
   `;
@@ -338,9 +338,9 @@ async function readApprovedBudget(): Promise<number> {
   // Build candidate list: configured field first, then known fallbacks.
   // Following Microsoft's pattern — getFieldValue with known reference name strings.
   // Fallbacks handle the case where Options panel config is null or holds wrong name.
-  // Use configured ref if set, otherwise fall back to Custom.EstimatedBudget
+  // Use configured ref if set, otherwise fall back to Custom.EstimatedCost
   const candidates = Array.from(new Set([
-    config.approvedBudgetFieldRef ?? "Custom.EstimatedBudget",
+    config.approvedBudgetFieldRef ?? "Custom.EstimatedCost",
   ]));
 
   for (const candidate of candidates) {
