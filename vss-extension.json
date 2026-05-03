@@ -1,49 +1,56 @@
 {
   "manifestVersion": 1,
-
   "id": "ado-epic-budget-data-table",
   "publisher": "deenuy",
-  "version": "1.0.2",
-
+  "version": "1.0.3",
   "name": "ADO Epic Budget Table",
   "description": "Budget planning table for PMO Epics. Track spend by Fiscal Year and Quarter (Q1-Q4). Auto-computes KPIs and writes back to queryable Epic fields.",
   "public": true,
-  "categories": ["Azure Boards"],
-
-  "targets": [
-    { "id": "Microsoft.VisualStudio.Services" }
+  "categories": [
+    "Azure Boards"
   ],
-
+  "targets": [
+    {
+      "id": "Microsoft.VisualStudio.Services"
+    }
+  ],
   "icons": {
     "default": "images/extension-icon.png"
   },
-
   "scopes": [
     "vso.work",
     "vso.work_write"
   ],
-
   "content": {
-    "details":  { "path": "overview.md" },
-    "license":  { "path": "LICENSE" }
+    "details": {
+      "path": "overview.md"
+    },
+    "license": {
+      "path": "LICENSE"
+    }
   },
-
   "links": {
-    "repository": { "uri": "https://github.com/deenuy/ado-epic-budget-data-table" },
-    "issues":     { "uri": "https://github.com/deenuy/ado-epic-budget-data-table/issues" },
-    "support":    { "uri": "https://github.com/deenuy/ado-epic-budget-data-table/issues" }
+    "repository": {
+      "uri": "https://github.com/deenuy/ado-epic-budget-data-table"
+    },
+    "issues": {
+      "uri": "https://github.com/deenuy/ado-epic-budget-data-table/issues"
+    },
+    "support": {
+      "uri": "https://github.com/deenuy/ado-epic-budget-data-table/issues"
+    }
   },
-
   "branding": {
     "color": "#0078d4",
     "theme": "dark"
   },
-
   "contributions": [
     {
       "id": "ado-epic-budget-table-control-v1",
       "type": "ms.vss-work-web.work-item-form-control",
-      "targets": ["ms.vss-work-web.work-item-form"],
+      "targets": [
+        "ms.vss-work-web.work-item-form"
+      ],
       "description": "Financial budget planning table for Azure DevOps Epic work items. Enter quarterly spend by Fiscal Year and Cost Category. Computes and writes KPIs back to queryable Epic fields.",
       "properties": {
         "name": "ADO Epic Budget Table",
@@ -57,7 +64,10 @@
             "type": "WorkItemField",
             "defaultValue": "Custom.FinancialsTableJson",
             "properties": {
-              "workItemFieldTypes": ["PlainText", "Html"]
+              "workItemFieldTypes": [
+                "PlainText",
+                "Html"
+              ]
             },
             "validation": {
               "dataType": "String",
@@ -71,7 +81,10 @@
             "type": "WorkItemField",
             "defaultValue": "",
             "properties": {
-              "workItemFieldTypes": ["Double", "Integer"]
+              "workItemFieldTypes": [
+                "Double",
+                "Integer"
+              ]
             },
             "validation": {
               "dataType": "String",
@@ -85,7 +98,10 @@
             "type": "WorkItemField",
             "defaultValue": "",
             "properties": {
-              "workItemFieldTypes": ["Double", "Integer"]
+              "workItemFieldTypes": [
+                "Double",
+                "Integer"
+              ]
             },
             "validation": {
               "dataType": "String",
@@ -99,7 +115,10 @@
             "type": "WorkItemField",
             "defaultValue": "",
             "properties": {
-              "workItemFieldTypes": ["Double", "Integer"]
+              "workItemFieldTypes": [
+                "Double",
+                "Integer"
+              ]
             },
             "validation": {
               "dataType": "String",
@@ -113,7 +132,10 @@
             "type": "WorkItemField",
             "defaultValue": "",
             "properties": {
-              "workItemFieldTypes": ["Double", "Integer"]
+              "workItemFieldTypes": [
+                "Double",
+                "Integer"
+              ]
             },
             "validation": {
               "dataType": "String",
@@ -124,10 +146,18 @@
       }
     }
   ],
-
   "files": [
-    { "path": "dist",        "addressable": true },
-    { "path": "images",      "addressable": true },
-    { "path": "overview.md", "addressable": true }
+    {
+      "path": "dist",
+      "addressable": true
+    },
+    {
+      "path": "images",
+      "addressable": true
+    },
+    {
+      "path": "overview.md",
+      "addressable": true
+    }
   ]
 }
