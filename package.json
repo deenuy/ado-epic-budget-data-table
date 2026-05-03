@@ -1,7 +1,7 @@
 {
   "name": "ado-epic-budget-table",
   "version": "1.0.0",
-  "description": "Financial budget planning table for Azure DevOps PMO Epics — fiscal year × quarterly spend, auto-computed KPIs, queryable Epic fields.",
+  "description": "Financial budget planning table for Azure DevOps PMO Epics \u2014 fiscal year \u00d7 quarterly spend, auto-computed KPIs, queryable Epic fields.",
   "author": "Deenu Gengiti",
   "license": "MIT",
   "repository": {
@@ -15,7 +15,7 @@
   "scripts": {
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",
-    "package": "npm run build && npx tfx-cli extension create --manifest-globs vss-extension.json --rev-version",
+    "package": "npm run build && npx tfx-cli extension create --manifest-globs vss-extension.json && mv *.vsix releases/",
     "publish": "npm run build && npx tfx-cli extension publish --manifest-globs vss-extension.json --rev-version --token ${MARKETPLACE_TOKEN}"
   },
   "dependencies": {
