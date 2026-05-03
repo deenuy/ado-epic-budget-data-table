@@ -3,10 +3,10 @@
 
   "id": "ado-epic-budget-data-table",
   "publisher": "deenuy",
-  "version": "1.0.0",
+  "version": "1.0.2",
 
   "name": "ADO Epic Budget Table",
-  "description": "Purpose-built budget planning table for PMO Epics. Track spend by Fiscal Year and Cost Category across Q1–Q4. Auto-computes Total Planned Spend, Budget Remaining, and % of Budget, and written back to queryable Epic fields.",
+  "description": "Budget planning table for PMO Epics. Track spend by Fiscal Year and Quarter (Q1-Q4). Auto-computes KPIs and writes back to queryable Epic fields.",
   "public": true,
   "categories": ["Azure Boards"],
 
