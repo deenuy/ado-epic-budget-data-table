@@ -53,11 +53,7 @@ _release: _bump build package _tag
 # ── Bump version in both manifest files ──────────────────────
 _bump:
 	@echo "Bumping $(CURRENT) -> $(VERSION)..."
-	@python3 -c "\
-import json; \
-[open(f,'w').write(json.dumps({**json.load(open(f)), 'version': '$(VERSION)'}, indent=2) + '\n') \
-or print(f'  {f} -> $(VERSION)') \
-for f in ['vss-extension.json', 'package.json']]"
+	@python3 bump_version.py $(VERSION)
 
 # ── Build ─────────────────────────────────────────────────────
 build:
