@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    name: Publish to Marketplace
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install tfx-cli
+        run: npm install -g tfx-cli
+
+      - name: Build
+        run: npm run build
+
+      - name: Package extension
+        run: npx tfx-cli extension create --manifest-globs vss-extension.json
+
+      - name: Publish to Marketplace
+        run: |
+          npx tfx-cli extension publish \
+            --manifest-globs vss-extension.json \
+            --token ${{ secrets.MARKETPLACE_TOKEN }}
