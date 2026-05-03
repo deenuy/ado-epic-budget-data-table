@@ -13,28 +13,28 @@
   },
   "homepage": "https://github.com/YOUR_GITHUB_USERNAME/ado-epic-budget-table#readme",
   "scripts": {
-    "build":   "webpack --mode production",
-    "dev":     "webpack --mode development --watch",
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch",
     "package": "npm run build && npx tfx-cli extension create --manifest-globs vss-extension.json --rev-version",
     "publish": "npm run build && npx tfx-cli extension publish --manifest-globs vss-extension.json --rev-version --token ${MARKETPLACE_TOKEN}"
   },
   "dependencies": {
     "azure-devops-extension-api": "^4.259.0",
     "azure-devops-extension-sdk": "^4.0.2",
-    "datatables.net":             "^2.3.3",
-    "datatables.net-dt":          "^2.3.3",
-    "jquery":                     "^3.7.1"
+    "datatables.net": "^2.3.3",
+    "datatables.net-dt": "^2.3.3",
+    "jquery": "^3.7.1"
   },
   "devDependencies": {
-    "@types/jquery":        "^3.5.33",
-    "@types/node":          "^24.3.0",
-    "copy-webpack-plugin":  "^13.0.1",
-    "css-loader":           "^7.1.2",
-    "html-webpack-plugin":  "^5.6.4",
-    "style-loader":         "^4.0.0",
-    "ts-loader":            "^9.5.4",
-    "typescript":           "^5.9.2",
-    "webpack":              "^5.101.3",
-    "webpack-cli":          "^6.0.1"
+    "@types/jquery": "^3.5.33",
+    "@types/node": "^24.3.0",
+    "copy-webpack-plugin": "^14.0.0",
+    "css-loader": "^7.1.2",
+    "html-webpack-plugin": "^5.6.4",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.2",
+    "webpack": "^5.101.3",
+    "webpack-cli": "^6.0.1"
   }
 }

@@ -16,7 +16,7 @@ Describe your idea clearly.
 Other approaches you thought about.
 
 ## Who would benefit?
-e.g. "PMO managers tracking multi-year programmes", "finance teams needing actuals vs planned"
+e.g. "PMO managers tracking multi-year programmes"
 
 ## Additional context
 Screenshots, mockups, or links to similar extensions are very welcome.

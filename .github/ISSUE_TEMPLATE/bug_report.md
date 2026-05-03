@@ -26,8 +26,8 @@ What actually happened.
 - Browser:
 - Theme: [ ] Light  [ ] Dark
 
-## Screenshots / console errors
-<!-- Paste F12 console errors here if relevant -->
+## Console errors
+<!-- Open F12 → Console, paste any red errors here -->
 
 ## Additional context
-<!-- e.g. your field configuration, number of rows, column layout -->
+<!-- Field configuration, number of rows, etc. -->

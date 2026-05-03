@@ -9,7 +9,6 @@ jobs:
   publish:
     name: Publish to Marketplace
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -27,9 +26,6 @@ jobs:
 
       - name: Build
         run: npm run build
-
-      - name: Package extension
-        run: npx tfx-cli extension create --manifest-globs vss-extension.json
 
       - name: Publish to Marketplace
         run: |

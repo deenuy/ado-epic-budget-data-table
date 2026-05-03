@@ -2,7 +2,7 @@
 <!-- One-line summary -->
 
 ## Why?
-<!-- Link the issue: Closes #123 -->
+<!-- Link the issue this closes: Closes #123 -->
 
 ## Type of change
 - [ ] Bug fix
@@ -12,9 +12,9 @@
 - [ ] CI / tooling
 
 ## Checklist
-- [ ] `npm run build` passes with no errors
+- [ ] `npm run build` passes with no TypeScript errors
 - [ ] Tested against a real Azure DevOps org (sandbox is fine)
-- [ ] `suppressDirty` / `skipFieldChangeOnce` guards respected (no write loops)
+- [ ] `suppressDirty` / `skipFieldChangeOnce` guards respected
 - [ ] `computeFinancials()` remains a pure function (no SDK/DOM deps added)
-- [ ] README updated if behaviour changed
+- [ ] README updated if behaviour or setup steps changed
 - [ ] No `dist/` files committed
