@@ -19,25 +19,21 @@ import "./styles.css";
 
 /* ─────────────────────────────── Constants ─────────────────────────────── */
 
-const VERSION = "1.0.0";
+const _VERSION = "1.0.0"; // exported for package.json alignment
 const DEBUG   = false;
 
 const FISCAL_YEARS  = ["FY25", "FY26", "FY27", "FY28", "FY29", "FY30", "FY31", "FY32", "FY33", "FY34", "FY35", "FY36", "FY37", "FY38", "FY39", "FY40"];
-const COST_CATS     = ["Labor", "Materials & Supplies", "Travel & Expenses", "Contracts", "Software", "Other"];
-const EXPENSE_TYPES = ["CapEx", "OpEx"];
 
 /* ─────────────────────────────── Types ─────────────────────────────── */
 
 interface BudgetRow {
-  _id:         number;
-  fiscalYear:  string;
-  costCat:     string;
-  expenseType: string;
-  q1:          number;
-  q2:          number;
-  q3:          number;
-  q4:          number;
-  notes:       string;
+  _id:        number;
+  fiscalYear: string;
+  q1:         number;
+  q2:         number;
+  q3:         number;
+  q4:         number;
+  notes:      string;
 }
 
 interface FinancialSummary {
@@ -95,16 +91,16 @@ function readConfig(): ExtensionConfig {
 
 function esc(s: string) {
   return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
 }
 
 function decodeHtml(s: string): string {
   return s
-    .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
-    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+      .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 }
 
 function stripTags(s: string): string {
@@ -128,13 +124,13 @@ function setStatus(msg: string) {
 
 function computeFinancials(rows: BudgetRow[], approvedBudget: number): FinancialSummary {
   const totalSpentToDate = rows.reduce(
-    (sum, r) => sum + (Number(r.q1) || 0) + (Number(r.q2) || 0) + (Number(r.q3) || 0) + (Number(r.q4) || 0),
-    0
+      (sum, r) => sum + (Number(r.q1) || 0) + (Number(r.q2) || 0) + (Number(r.q3) || 0) + (Number(r.q4) || 0),
+      0
   );
   const budgetRemaining = approvedBudget - totalSpentToDate;
   const percentSpent    = approvedBudget > 0
-    ? Math.round((totalSpentToDate / approvedBudget) * 10000) / 100
-    : 0;
+      ? Math.round((totalSpentToDate / approvedBudget) * 10000) / 100
+      : 0;
   return { totalSpentToDate, budgetRemaining, percentSpent, approvedBudget };
 }
 
@@ -198,7 +194,7 @@ function updateFooterTotals(rows: BudgetRow[]) {
   const tfoot = document.querySelector("#gridTable tfoot .totals-row");
   if (!tfoot) return;
   (tfoot as HTMLElement).innerHTML = `
-    <td colspan="3"><strong>TOTALS</strong></td>
+    <td><strong>TOTALS</strong></td>
     <td class="num-cell"><strong>${fmtCurrency(totals.q1)}</strong></td>
     <td class="num-cell"><strong>${fmtCurrency(totals.q2)}</strong></td>
     <td class="num-cell"><strong>${fmtCurrency(totals.q3)}</strong></td>
@@ -232,34 +228,24 @@ function renderTable(initial: BudgetRow[]) {
 
   const columns = [
     {
-      data: "fiscalYear", title: "Fiscal Year", width: "90px",
-      render: (d: string, type: string, row: BudgetRow) =>
-        type !== "display" ? d : selectCell("fiscalYear", FISCAL_YEARS, d)
+      data: "fiscalYear", title: "Fiscal Year", width: "100px",
+      render: (d: string, type: string) =>
+          type !== "display" ? d : selectCell("fiscalYear", FISCAL_YEARS, d)
     },
     {
-      data: "costCat", title: "Cost Category", width: "160px",
-      render: (d: string, type: string, row: BudgetRow) =>
-        type !== "display" ? d : selectCell("costCat", COST_CATS, d)
-    },
-    {
-      data: "expenseType", title: "Type", width: "80px",
-      render: (d: string, type: string, row: BudgetRow) =>
-        type !== "display" ? d : selectCell("expenseType", EXPENSE_TYPES, d)
-    },
-    {
-      data: "q1", title: "Q1 ($)", width: "90px", type: "num",
+      data: "q1", title: "Q1 ($)", width: "110px", type: "num",
       render: (d: number, type: string) => type !== "display" ? (Number(d) || 0) : numCell("q1", d)
     },
     {
-      data: "q2", title: "Q2 ($)", width: "90px", type: "num",
+      data: "q2", title: "Q2 ($)", width: "110px", type: "num",
       render: (d: number, type: string) => type !== "display" ? (Number(d) || 0) : numCell("q2", d)
     },
     {
-      data: "q3", title: "Q3 ($)", width: "90px", type: "num",
+      data: "q3", title: "Q3 ($)", width: "110px", type: "num",
       render: (d: number, type: string) => type !== "display" ? (Number(d) || 0) : numCell("q3", d)
     },
     {
-      data: "q4", title: "Q4 ($)", width: "90px", type: "num",
+      data: "q4", title: "Q4 ($)", width: "110px", type: "num",
       render: (d: number, type: string) => type !== "display" ? (Number(d) || 0) : numCell("q4", d)
     },
     {
@@ -267,8 +253,8 @@ function renderTable(initial: BudgetRow[]) {
       render: (d: string, type: string) => type !== "display" ? (d || "") : textCell("notes", d)
     },
     {
-      data: null, title: "Actions", width: "70px", orderable: false,
-      defaultContent: `<button class="azdo-btn btn-remove" title="Delete row">Delete</button>`
+      data: null, title: "Actions", width: "80px", orderable: false,
+      defaultContent: `<button class="azdo-btn btn-remove" type="button" aria-label="Delete row">Delete</button>`
     },
   ];
 
@@ -285,7 +271,7 @@ function renderTable(initial: BudgetRow[]) {
     initComplete: function () {
       // Inject tfoot totals row
       const tfoot = document.createElement("tfoot");
-      tfoot.innerHTML = `<tr class="totals-row"><td colspan="9"></td></tr>`;
+      tfoot.innerHTML = `<tr class="totals-row"><td colspan="7"></td></tr>`;
       document.getElementById("gridTable")!.appendChild(tfoot);
       updateFooterTotals(initial);
     },
@@ -299,15 +285,15 @@ function renderTable(initial: BudgetRow[]) {
 
   // Wire cell change events
   $("#gridTable tbody")
-    .off("input.fin change.fin click.fin")
-    .on("input.fin change.fin", "input, select", () => { if (!suppressDirty) markDirty(); })
-    .on("click.fin", "button.btn-remove", function () {
-      dt.row($(this).closest("tr")).remove().draw(false);
-      if (!suppressDirty) {
-        markDirty();
-        refreshSummary();
-      }
-    });
+      .off("input.fin change.fin click.fin")
+      .on("input.fin change.fin", "input, select", () => { if (!suppressDirty) markDirty(); })
+      .on("click.fin", "button.btn-remove", function () {
+        dt.row($(this).closest("tr")).remove().draw(false);
+        if (!suppressDirty) {
+          markDirty();
+          refreshSummary();
+        }
+      });
 
   // Wire draw event to keep footer totals in sync
   dt.on("draw.dt", () => {
@@ -330,23 +316,19 @@ function getRowsFromTable(): BudgetRow[] {
     const data  = dt.row(idx).data() as BudgetRow || {};
     const node  = dt.row(idx).node?.() as HTMLElement | null;
     const row: BudgetRow = {
-      _id:         data._id || idx + 1,
-      fiscalYear:  data.fiscalYear  || FISCAL_YEARS[0],
-      costCat:     data.costCat     || COST_CATS[0],
-      expenseType: data.expenseType || EXPENSE_TYPES[0],
-      q1:          data.q1 ?? 0,
-      q2:          data.q2 ?? 0,
-      q3:          data.q3 ?? 0,
-      q4:          data.q4 ?? 0,
-      notes:       data.notes || "",
+      _id:        data._id || idx + 1,
+      fiscalYear: data.fiscalYear || FISCAL_YEARS[0],
+      q1:         data.q1 ?? 0,
+      q2:         data.q2 ?? 0,
+      q3:         data.q3 ?? 0,
+      q4:         data.q4 ?? 0,
+      notes:      data.notes || "",
     };
 
     if (node) {
       const $tr = $(node);
-      (["fiscalYear", "costCat", "expenseType"] as const).forEach(col => {
-        const sel = $tr.find(`select.dt-${col}`);
-        if (sel.length) (row as any)[col] = sel.val() as string;
-      });
+      const fySelect = $tr.find("select.dt-fiscalYear");
+      if (fySelect.length) row.fiscalYear = fySelect.val() as string;
       (["q1", "q2", "q3", "q4"] as const).forEach(col => {
         const inp = $tr.find(`input.dt-${col}`);
         if (inp.length) row[col] = Number(inp.val()) || 0;
@@ -366,8 +348,27 @@ function getRowsFromTable(): BudgetRow[] {
 
 async function readApprovedBudget(): Promise<number> {
   if (!workItemService || !config.approvedBudgetFieldRef) return 0;
+  const ref = config.approvedBudgetFieldRef;
+  // Try the configured ref, then common AzDO built-in variants
+  const candidates = [
+    ref,
+    ref.startsWith("Custom.") ? ref : `Custom.${ref}`,
+    `Microsoft.VSTS.Scheduling.StoryPoints`,
+    `Microsoft.VSTS.Scheduling.OriginalEstimate`,
+  ];
+  for (const candidate of candidates) {
+    try {
+      const val = await workItemService.getFieldValue(candidate);
+      const n = Number(val);
+      if (!isNaN(n) && n > 0) {
+        log("readApprovedBudget resolved via", candidate, "=", n);
+        return n;
+      }
+    } catch {}
+  }
+  // Last attempt — try the raw ref regardless of value
   try {
-    const val = await workItemService.getFieldValue(config.approvedBudgetFieldRef);
+    const val = await workItemService.getFieldValue(ref);
     return Number(val) || 0;
   } catch (e) {
     log("readApprovedBudget error", e);
@@ -478,15 +479,13 @@ async function loadFromField(): Promise<void> {
       const parsed = JSON.parse(json);
       if (Array.isArray(parsed)) {
         rows = parsed.map((p: any, i: number): BudgetRow => ({
-          _id:         p._id         || i + 1,
-          fiscalYear:  p.fiscalYear  || FISCAL_YEARS[0],
-          costCat:     p.costCat     || COST_CATS[0],
-          expenseType: p.expenseType || EXPENSE_TYPES[0],
-          q1:          Number(p.q1)  || 0,
-          q2:          Number(p.q2)  || 0,
-          q3:          Number(p.q3)  || 0,
-          q4:          Number(p.q4)  || 0,
-          notes:       p.notes       || "",
+          _id:        p._id        || i + 1,
+          fiscalYear: p.fiscalYear || FISCAL_YEARS[0],
+          q1:         Number(p.q1) || 0,
+          q2:         Number(p.q2) || 0,
+          q3:         Number(p.q3) || 0,
+          q4:         Number(p.q4) || 0,
+          notes:      p.notes      || "",
         }));
       }
     }
@@ -508,15 +507,13 @@ async function loadFromField(): Promise<void> {
 function addNewRow() {
   if (!dt) return;
   const newRow: BudgetRow = {
-    _id:         nextId++,
-    fiscalYear:  FISCAL_YEARS[0],
-    costCat:     COST_CATS[0],
-    expenseType: EXPENSE_TYPES[0],
-    q1:          0,
-    q2:          0,
-    q3:          0,
-    q4:          0,
-    notes:       "",
+    _id:        nextId++,
+    fiscalYear: FISCAL_YEARS[0],
+    q1:         0,
+    q2:         0,
+    q3:         0,
+    q4:         0,
+    notes:      "",
   };
   dt.row.add(newRow).draw(false);
   if (!suppressDirty) markDirty();
@@ -545,7 +542,7 @@ const provider = () => ({
       config = readConfig();
 
       workItemService = await SDK.getService<IWorkItemFormService>(
-        WorkItemTrackingServiceIds.WorkItemFormService
+          WorkItemTrackingServiceIds.WorkItemFormService
       );
 
       // Probe and resolve the JSON storage field
