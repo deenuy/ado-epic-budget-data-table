@@ -346,3 +346,101 @@ html, body {
   display: block;
   clear:   both;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TRANSPOSED TABLE STYLES
+   Fixed 4 rows (Q1-Q4), dynamic FY columns
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.transposed-table {
+  width:           100%;
+  border-collapse: collapse;
+  table-layout:    auto;
+}
+
+.transposed-table th,
+.transposed-table td {
+  border:   1px solid var(--az-border);
+  padding:  6px 8px;
+  text-align: right;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* FY header cells */
+.transposed-table thead th.fy-header {
+  background:  var(--az-hover);
+  font-weight: 600;
+  font-size:   13px;
+  color:       var(--az-text-strong);
+  text-align:  center;
+  min-width:   110px;
+}
+
+/* Row label cells — left column (Q1/Q2/Q3/Q4 labels) */
+.transposed-table .row-label-cell {
+  text-align:  left;
+  background:  var(--az-hover);
+  font-weight: 600;
+  font-size:   12px;
+  color:       var(--az-muted);
+  white-space: nowrap;
+  width:       80px;
+}
+
+/* Delete button row */
+.transposed-table .delete-row td {
+  background:  var(--az-surface);
+  border-top:  none;
+  text-align:  center;
+  padding:     4px 8px;
+}
+
+/* Quarter input cells */
+.transposed-table tbody td {
+  background: var(--az-surface);
+  padding:    4px 6px;
+}
+
+.transposed-table tbody tr:hover > td { background: var(--az-hover); }
+
+/* FY total footer */
+.transposed-table tfoot .totals-row td {
+  background:  var(--az-selected);
+  border-top:  2px solid var(--az-primary);
+  font-size:   12px;
+  font-weight: 600;
+  color:       var(--az-primary);
+  text-align:  right;
+}
+
+.transposed-table tfoot .totals-row .row-label-cell {
+  color: var(--az-text-strong);
+}
+
+/* Number inputs inside transposed cells */
+.transposed-table input[type="number"] {
+  width:         100%;
+  min-width:     80px;
+  height:        24px;
+  border:        1px solid var(--az-border);
+  border-radius: var(--az-radius-sm);
+  background:    var(--az-bg);
+  color:         var(--az-text);
+  padding:       0 4px;
+  font-family:   var(--az-font);
+  font-size:     13px;
+  text-align:    right;
+  font-variant-numeric: tabular-nums;
+}
+
+.transposed-table input[type="number"]:hover { border-color: var(--az-border-strong); }
+.transposed-table input[type="number"]:focus { outline: none; border-color: var(--az-primary); }
+
+/* No-rows message */
+.no-rows-msg {
+  color:       var(--az-muted);
+  font-size:   13px;
+  padding:     24px 16px;
+  text-align:  center;
+}
