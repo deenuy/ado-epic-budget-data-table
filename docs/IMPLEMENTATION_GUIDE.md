@@ -10,7 +10,7 @@ Project and program managers open a PMO Epic, navigate to the **Budget** tab, an
 
 | Element | Description |
 |---|---|
-| **Summary banner** | Estimated Cost, Total Committed Spend, Remaining, and % of Budget with a RAG progress bar |
+| **Summary banner** | Approved Budget, Total Committed Spend, Remaining, and % of Budget with a RAG progress bar |
 | **Transposed budget grid** | Fixed Q1/Q2/Q3/Q4 rows with one column per fiscal year and FY totals in the footer |
 | **Add FY / Delete** | Add a fiscal year as a new column or remove one. Columns are always ordered ascending. |
 | **Auto-save** | Edits are saved automatically with a 400ms debounce. No manual Save required for normal use. |
@@ -40,8 +40,8 @@ Create each field as **Decimal** type on the PMO Epic work item type:
 | Display Name | Reference Name | Written by extension |
 |---|---|---|
 | Total Committed Spend | `Custom.TotalPlannedSpend` | Sum of all Q1-Q4 amounts across all fiscal years |
-| Total Budget Remaining | `Custom.TotalBudgetRemaining` | Estimated Cost minus Total Committed Spend |
-| Percent of Budget | `Custom.PercentOfBudget` | (Committed Spend / Estimated Cost) x 100 |
+| Total Budget Remaining | `Custom.TotalBudgetRemaining` | Approved Budget minus Total Committed Spend |
+| Percent of Budget | `Custom.PercentOfBudget` | (Committed Spend / Approved Budget) x 100 |
 
 Set these fields to read-only in the process layout, or hide them from the form. The extension attempts to enforce read-only via `setFieldOptions` on load. This call is best-effort and silently skips on Azure DevOps Server versions that do not implement the API. These fields are surfaced in the summary banner, not as editable form inputs.
 
@@ -57,7 +57,7 @@ The extension reads the **Currency** field (`Custom.Currency`) to format all mon
 
 ## Part 2: Add the control to the Budget page (Admin, ~10 minutes)
 
-1. Go to **Organization Settings > Boards > Process > DAUT-GES-Agile-PPM-Process-Template > PMO Epic**.
+1. Go to **Organization Settings > Boards > Process > [Your Inherited Process] > PMO Epic**.
 2. Open the **Budget** page, or create a new page named `Budget`.
 3. Select **Add custom control** and choose **ADO Epic Budget Table**.
 4. Select the control, open the **Options** tab, and configure the field references:
@@ -94,7 +94,7 @@ SDK.init / ready
 User edits a cell or adds/removes a fiscal year column
   └─ markDirty() [400ms debounce] -> runSave()
        ├─ setFieldValue(dataFieldRef, JSON)        persists rows to the storage field
-       ├─ readApprovedBudget()                      reads Estimated Cost
+       ├─ readApprovedBudget()                      reads Approved Budget field (Custom.EstimatedCost)
        ├─ computeFinancials(rows, approvedBudget)   pure function with no SDK dependencies
        ├─ renderSummary()                            updates the banner
        └─ writeComputedFields()                     calls setFieldValue for each of the 3 computed fields
@@ -103,7 +103,7 @@ provider.onFieldChanged()
   ├─ echo from own writes        skipped via skipFieldChangeOnce counter
   ├─ external JSON field change  calls loadFromField() to reload from another tab or user
   ├─ Currency field changed      calls readCurrency() then refreshSummary()
-  └─ Estimated Cost changed      calls refreshSummary() only (no writeback on external change)
+  └─ Approved Budget changed     calls refreshSummary() only (no writeback on external change)
 ```
 
 ### Key design decisions
@@ -156,9 +156,9 @@ Because computed values are written to native Epic decimal fields, you can query
 
 ```sql
 SELECT [System.Id], [System.Title],
-       [Custom.TotalPlannedSpend],
-       [Custom.TotalBudgetRemaining],
-       [Custom.PercentOfBudget]
+    [Custom.TotalPlannedSpend],
+    [Custom.TotalBudgetRemaining],
+    [Custom.PercentOfBudget]
 FROM WorkItems
 WHERE [System.WorkItemType] = 'PMO Epic'
   AND [Custom.PercentOfBudget] >= 90

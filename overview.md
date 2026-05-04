@@ -11,7 +11,7 @@
 > **Report issues:** [github.com/deenuy/ado-epic-budget-data-table/issues](https://github.com/deenuy/ado-epic-budget-data-table/issues)
 
 <!-- [IMAGE REQUIRED: Full extension screenshot showing the Budget tab with summary banner and transposed grid] -->
-<!-- Title: ADO Epic Budget Table showing Estimated Cost, Total Committed Spend, Remaining, and fiscal year columns -->
+<!-- Title: ADO Epic Budget Table showing Approved Budget, Total Committed Spend, Remaining, and fiscal year columns -->
 
 ---
 
@@ -20,7 +20,7 @@
 Add a **Budget** tab to any PMO Epic. Project managers enter spend amounts by Fiscal Year across quarterly columns (Q1-Q4). The extension automatically:
 
 - Shows a **transposed budget grid** with fixed Q1/Q2/Q3/Q4 rows, dynamic fiscal year columns, and FY totals in the footer
-- Reads **Estimated Cost** from your existing Epic field and displays it as the approved budget
+- Reads your **Approved Budget** from the configured Epic decimal field (defaults to `Custom.EstimatedCost`)
 - Computes **Total Committed Spend**, **Budget Remaining**, and **% of Budget**
 - Shows a live **RAG-coloured summary banner** and progress bar (green below 75%, amber 75-90%, red above 90%)
 - Formats monetary values using your **Currency** field (USD, EUR, GBP, INR, JPY, and 15+ others)
@@ -33,10 +33,11 @@ Add a **Budget** tab to any PMO Epic. Project managers enter spend amounts by Fi
 | Feature | Detail |
 |---|---|
 | **Transposed budget grid** | Fixed Q1-Q4 rows. Add or remove fiscal years as columns. FY total shown in footer per column. |
-| **Summary banner** | Estimated Cost, Total Committed Spend, Remaining, and % of Budget with RAG progress bar. |
+| **Summary banner** | Approved Budget, Total Committed Spend, Remaining, and % of Budget with RAG progress bar. |
 | **Auto-save** | Edits persist automatically with a 400ms debounce. No manual Save required for normal use. |
 | **Currency support** | Reads ISO 4217 code from your Currency field. Supports 20+ currencies including USD, EUR, GBP, and INR. |
 | **Field writeback** | Computed KPIs written to native Epic decimal fields, queryable via WIQL and dashboard widgets. |
+| **Light / dark mode** | Respects the Azure DevOps theme automatically. No configuration required. |
 | **No external dependencies** | All computation runs in the browser. Data is stored in your Azure DevOps fields. Nothing leaves your organization. |
 
 ---
@@ -72,7 +73,7 @@ These fields must exist on the PMO Epic work item type before you configure the 
 
 1. Go to **Organization Settings**.
 2. Select **Boards > Process**.
-3. Click on your inherited process (for example, **DAUT-GES-Agile-PPM-Process-Template**).
+3. Click on your inherited process (for example, **Your-Inherited-Process-Template**).
 4. Click **PMO Epic** to open work item type customization.
 
 <!-- [IMAGE REQUIRED: Organization Settings > Process showing the inherited process list] -->
@@ -102,8 +103,8 @@ Create each of the following as **Decimal** type on the PMO Epic:
 | Display Name | Reference Name | Purpose |
 |---|---|---|
 | Total Committed Spend | `Custom.TotalPlannedSpend` | Sum of all Q1-Q4 amounts across all fiscal years |
-| Total Budget Remaining | `Custom.TotalBudgetRemaining` | Estimated Cost minus Total Committed Spend |
-| Percent of Budget | `Custom.PercentOfBudget` | (Committed Spend / Estimated Cost) x 100 |
+| Total Budget Remaining | `Custom.TotalBudgetRemaining` | Approved Budget minus Total Committed Spend |
+| Percent of Budget | `Custom.PercentOfBudget` | (Committed Spend / Approved Budget) x 100 |
 
 Set these fields to **read-only** in the process layout, or hide them from the form. The extension writes to them programmatically. They are surfaced in the summary banner and are queryable via WIQL.
 
@@ -179,7 +180,7 @@ Navigate to any PMO Epic in your project and click the **Budget** tab.
 <!-- [IMAGE REQUIRED: Transposed grid with multiple FY columns and amounts entered, showing FY totals in footer] -->
 <!-- Title: Transposed budget grid with fiscal year columns and quarterly spend amounts -->
 
-<!-- [IMAGE REQUIRED: Summary banner showing Estimated Cost, Total Committed Spend, Remaining, and % of Budget with red RAG bar] -->
+<!-- [IMAGE REQUIRED: Summary banner showing Approved Budget, Total Committed Spend, Remaining, and % of Budget with red RAG bar] -->
 <!-- Title: Summary banner with RAG-coloured progress bar indicating over-budget status -->
 
 ---
@@ -190,9 +191,9 @@ Because computed values are written to native Epic decimal fields, you can query
 
 ```sql
 SELECT [System.Id], [System.Title],
-       [Custom.TotalPlannedSpend],
-       [Custom.TotalBudgetRemaining],
-       [Custom.PercentOfBudget]
+   [Custom.TotalPlannedSpend],
+   [Custom.TotalBudgetRemaining],
+   [Custom.PercentOfBudget]
 FROM WorkItems
 WHERE [System.WorkItemType] = 'PMO Epic'
   AND [Custom.PercentOfBudget] >= 90
