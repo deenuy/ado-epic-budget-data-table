@@ -16,85 +16,85 @@
 
 ---
 
-## The problem
+## Overview
 
-Project managers in Azure DevOps have no native way to plan and track budget spend by **fiscal year and quarter** on an Epic. The typical workarounds (Excel files, SharePoint lists, Power BI datasets) live outside the work item, break traceability, and require separate maintenance.
+Project managers in Azure DevOps have no native way to plan and track budget spend by fiscal year and quarter on an Epic. The typical workarounds (Excel files, SharePoint lists, Power BI datasets) live outside the work item, break traceability, and require separate maintenance.
 
-This extension puts a full budget planning table **directly on the Epic's Budget tab**, auto-computes your financial KPIs, and writes results to **queryable Epic decimal fields** so WIQL queries, dashboards, and backlog rollups reflect real budget data with no external tooling.
+This extension adds a **Budget tab** directly to any PMO Epic. Budget data is entered once, computed automatically, and stored in native Azure DevOps fields, making them immediately available for WIQL queries, dashboard widgets, and portfolio reporting with no external tooling.
 
 ---
 
 ## What you get
 
-| Feature | Detail |
+| Capability | Business value |
 |---|---|
-| **Transposed budget grid** | Fixed Q1-Q4 rows with one column per fiscal year. Add or remove fiscal years as columns. FY total shown in the footer per column. |
-| **Summary banner** | Approved Budget, Total Committed Spend, Remaining, and % of Budget with a RAG colour-coded progress bar (green below 75%, amber 75-90%, red above 90%) |
-| **Auto-save** | Edits persist automatically with a 400ms debounce. No Save button required for normal use. |
-| **Currency support** | Reads ISO 4217 code from your Currency field. Supports USD, EUR, GBP, INR, JPY, and 15+ others. |
-| **Field writeback** | Computed KPIs written to native Epic decimal fields, queryable via WIQL and dashboard widgets. |
-| **Light / dark mode** | Respects the Azure DevOps theme automatically via CSS custom properties. |
-| **No Power BI. No Power Automate. No external databases.** | All computation runs in the browser. Nothing leaves your organization. |
+| **Quarterly budget planning** | Plan spend across Q1-Q4 for each fiscal year in a single, structured view. No spreadsheets to maintain separately. |
+| **Instant budget health visibility** | A colour-coded summary banner shows Approved Budget, Total Committed Spend, Remaining, and % of Budget. Over-budget Epics are flagged immediately with the exact overage amount. |
+| **Portfolio reporting without Power BI** | Computed values are written to queryable Epic fields on every save. Use them in WIQL queries and Azure DevOps dashboard widgets across the portfolio. |
+| **Year-over-year spend analysis** | Per-fiscal-year spend is stored in individual fields (FY25 through FY35), enabling trend analysis and multi-year comparisons directly in Azure DevOps. |
+| **Multi-currency support** | Reads the currency code from your existing Currency field. Supports USD, EUR, GBP, INR, JPY, and 15+ others. Useful for globally distributed teams. |
+| **No additional cost or infrastructure** | All computation runs in the browser. Data is stored in your Azure DevOps fields. Nothing leaves your organization. No Power BI, Power Automate, or external databases required. |
 
 ---
 
 ## Quick Start
 
-### 1 - Install the extension
+### 1. Install the extension
 
 Install from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=deenuy.ado-epic-budget-data-table).
 
-### 2 - Create Epic fields
+### 2. Create Epic fields
 
-In **Organization Settings -> Process -> [Your Process] -> Epic**, create these fields:
+In **Organization Settings > Process > [Your Process] > PMO Epic**, create these fields:
 
 | Field Name | Type | Reference Name |
 |---|---|---|
 | Financials Table JSON | Text (multiple lines, Plain Text) | `Custom.FinancialsTableJson` |
-| Total Planned Spend | Decimal | `Custom.TotalPlannedSpend` |
+| Total Committed Spend | Decimal | `Custom.TotalPlannedSpend` |
 | Total Budget Remaining | Decimal | `Custom.TotalBudgetRemaining` |
 | Percent of Budget | Decimal | `Custom.PercentOfBudget` |
 
-> **Tip:** Point the Approved Budget Field at your existing Estimated Cost (`Custom.EstimatedCost`) or equivalent decimal field. No new field needed.
+> **Tip:** The extension reads your existing Estimated Cost field (`Custom.EstimatedCost`) as the Approved Budget. No new field needed for that.
 
-### 3 - Add the control to your Epic layout
+### 3. Add the control to your Epic layout
 
-1. Go to **Organization Settings -> Process -> [Your Process] -> Epic**
-2. Open the page where you want the control (e.g. Budget)
-3. Click **Add custom control** -> select **ADO Epic Budget Table**
+1. Go to **Organization Settings > Process > [Your Process] > PMO Epic**.
+2. Open or create the **Budget** page.
+3. Click **Add custom control** and select **ADO Epic Budget Table**.
 
-### 4 - Configure the control options
+### 4. Configure the control options
 
-| Input | Value |
+| Option | Value |
 |---|---|
 | JSON Storage Field | `Custom.FinancialsTableJson` |
-| Approved Budget Field | `Custom.EstimatedCost` (or your equivalent approved budget field) |
+| Approved Budget Field | `Custom.EstimatedCost` |
 | Total Planned Spend Field | `Custom.TotalPlannedSpend` |
 | Budget Remaining Field | `Custom.TotalBudgetRemaining` |
 | Percent of Budget Field | `Custom.PercentOfBudget` |
+| Currency Field | `Custom.Currency` (optional, defaults to USD) |
 
-### 5 - Open any Epic
+### 5. Open any PMO Epic
 
-Click the Budget tab, add rows, enter quarterly amounts, and watch the summary update live.
+Click the **Budget** tab, add fiscal year columns, enter quarterly amounts, and the summary updates in real time.
 
 ---
 
-## Querying budget data (no Power BI needed)
+## Portfolio reporting
 
-Because computed values are written to native Epic decimal fields, you can query them directly in WIQL:
+Because computed values are written to native Epic decimal fields, you can query them directly in WIQL without any external tooling:
 
 ```sql
 SELECT [System.Id], [System.Title],
-    [Custom.TotalPlannedSpend],
-    [Custom.TotalBudgetRemaining],
-    [Custom.PercentOfBudget]
+       [Custom.TotalPlannedSpend],
+       [Custom.TotalBudgetRemaining],
+       [Custom.PercentOfBudget]
 FROM WorkItems
-WHERE [System.WorkItemType] = 'Epic'
+WHERE [System.WorkItemType] = 'PMO Epic'
   AND [Custom.PercentOfBudget] >= 90
 ORDER BY [Custom.PercentOfBudget] DESC
 ```
 
-Use this as a **Work Item Query Chart** widget on your Azure DevOps dashboard. No additional tooling required.
+Save this as a **Work Item Query Chart** widget on your Azure DevOps dashboard for at-a-glance portfolio budget health.
 
 ---
 
@@ -115,12 +115,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development guide.
 
 ## Roadmap
 
-- [ ] Multi-currency support with per-row currency selector
-- [ ] Actuals columns (Q1-Q4 Actual vs Planned variance)
+- [ ] Actuals columns (Q1-Q4 Actual vs Planned variance per fiscal year)
 - [ ] Export budget table to CSV
-- [ ] Portfolio dashboard widget to aggregate across Epics via WIQL
+- [ ] Portfolio rollup dashboard widget to aggregate spend across Epics
 - [ ] Lock rows by Epic state (read-only when Approved)
-- [ ] Jest unit tests for `computeFinancials`
+- [ ] Jest unit tests for core financial computation
 
 See [open issues](https://github.com/deenuy/ado-epic-budget-data-table/issues) to pick something up.
 
@@ -136,7 +135,7 @@ Read the [Contributing Guide](CONTRIBUTING.md) to get started.
 
 ## License
 
-[MIT](LICENSE) - free to use, modify, and distribute.
+[MIT](LICENSE). Free to use, modify, and distribute.
 
 ---
 
@@ -145,8 +144,8 @@ Read the [Contributing Guide](CONTRIBUTING.md) to get started.
 Built by **Deenu Gengiti**
 
 If this saves your team time:
-- Star this repo - helps others find it
+- Star the repo. It helps others find it.
 - Leave a review on the [VS Marketplace](https://marketplace.visualstudio.com/items?itemName=deenuy.ado-epic-budget-data-table)
-- File issues - every bug report makes the extension better
+- File issues. Every bug report makes the extension better.
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://linkedin.com/in/deenuy)
