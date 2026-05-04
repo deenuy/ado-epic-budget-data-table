@@ -49,6 +49,25 @@ const ALL_FISCAL_YEARS = [
 ];
 
 /** Quarter field keys — must match BudgetRow interface property names. */
+
+/**
+ * Maps fiscal year labels to their corresponding queryable decimal field reference names.
+ * These fields are hidden on the Epic form but available for WIQL queries and dashboards.
+ */
+const FY_SPEND_FIELDS: Record<string, string> = {
+  FY25: "Custom.PlannedSpendFY25",
+  FY26: "Custom.PlannedSpendFY26",
+  FY27: "Custom.PlannedSpendFY27",
+  FY28: "Custom.PlannedSpendFY28",
+  FY29: "Custom.PlannedSpendFY29",
+  FY30: "Custom.PlannedSpendFY30",
+  FY31: "Custom.PlannedSpendFY31",
+  FY32: "Custom.PlannedSpendFY32",
+  FY33: "Custom.PlannedSpendFY33",
+  FY34: "Custom.PlannedSpendFY34",
+  FY35: "Custom.PlannedSpendFY35",
+};
+
 const QUARTERS: Array<keyof Pick<BudgetRow,"q1"|"q2"|"q3"|"q4">> = ["q1","q2","q3","q4"];
 
 /** Display labels for quarter rows in the transposed table. */
@@ -672,6 +691,92 @@ async function readApprovedBudget(): Promise<number> {
   return cachedApprovedBudget; // Return last known value to avoid banner reset
 }
 
+/**
+ * Computes per-fiscal-year spend totals from current BudgetRows.
+ * Only processes rows within FY25-FY35 range that have at least one
+ * non-empty numeric quarter value. Rows with no data are excluded so
+ * their corresponding field values are never overwritten.
+ *
+ * @param rows - Current BudgetRows from the table
+ * @returns Map of fiscal year label to computed total (only for rows with data)
+ */
+function computeFYSpendTotals(rows: BudgetRow[]): Map<string, number> {
+  const totals = new Map<string, number>();
+
+  for (const row of rows) {
+    if (!(row.fiscalYear in FY_SPEND_FIELDS)) continue; // Outside FY25-FY35 range
+
+    const rawQuarters = [row.q1, row.q2, row.q3, row.q4];
+
+    // A row qualifies as having data if at least one quarter is a valid number.
+    // Rows added to the table always qualify — the user explicitly added them.
+    // This check guards against rows that exist in JSON but have all nulls/NaN.
+    const hasData = rawQuarters.some(q => {
+      const n = Number(q);
+      return q !== null && q !== undefined && String(q).trim() !== "" && !isNaN(n);
+    });
+
+    if (!hasData) continue;
+
+    const total = rawQuarters.reduce((sum, q) => {
+      const n = Number(q);
+      return sum + (!isNaN(n) ? n : 0);
+    }, 0);
+
+    totals.set(row.fiscalYear, total);
+  }
+
+  return totals;
+}
+
+/**
+ * Writes per-fiscal-year spend totals to Custom.PlannedSpendFYxx decimal fields.
+ *
+ * Behaviour:
+ *   - Only writes fields where the row exists and has numeric data (from computeFYSpendTotals)
+ *   - Never writes to a field if the fiscal year is absent from the table
+ *   - Reads current field values first and skips writes where value is unchanged
+ *     (tolerance 0.01) to avoid marking the work item dirty unnecessarily
+ *   - Each write increments skipFieldChangeOnce to suppress SDK echo events
+ *
+ * @param rows - Current BudgetRows from the table
+ */
+async function writeFYSpendFields(rows: BudgetRow[]): Promise<void> {
+  if (!workItemService) return;
+
+  const totals = computeFYSpendTotals(rows);
+  if (totals.size === 0) return;
+
+  // Batch-read current values for idempotency check
+  const fieldRefs = Array.from(totals.keys()).map(fy => FY_SPEND_FIELDS[fy]);
+  let currentValues: Record<string, any> = {};
+  try {
+    currentValues = await workItemService.getFieldValues(fieldRefs);
+  } catch (e) {
+    log("writeFYSpendFields: getFieldValues failed, skipping idempotency check:", e);
+  }
+
+  for (const [fy, total] of totals) {
+    const fieldRef = FY_SPEND_FIELDS[fy];
+    const current  = Number(currentValues[fieldRef]);
+
+    // Skip if unchanged within floating-point tolerance to avoid unnecessary dirty flag
+    if (!isNaN(current) && Math.abs(current - total) < 0.01) {
+      log(`writeFYSpendFields: ${fy} unchanged (${total}) — skipping`);
+      continue;
+    }
+
+    skipFieldChangeOnce++;
+    try {
+      await workItemService.setFieldValue(fieldRef, total);
+      log(`writeFYSpendFields: wrote ${fy} -> ${fieldRef} = ${total}`);
+    } catch (e) {
+      skipFieldChangeOnce = Math.max(0, skipFieldChangeOnce - 1);
+      warn(`writeFYSpendFields: failed to write ${fieldRef}:`, e);
+    }
+  }
+}
+
 /* ─────────────────────────────── Computed field writeback ─────────────────────────────── */
 
 /**
@@ -752,6 +857,7 @@ async function runSave(rows: BudgetRow[], payload: string): Promise<void> {
     const summary  = computeFinancials(rows, approved);
     renderSummary(summary);
     await writeComputedFields(summary);
+    await writeFYSpendFields(rows);
   } catch (e: any) {
     setStatus("Auto-save error: " + (e?.message ?? String(e)));
     warn("runSave: error during save:", e);
@@ -977,6 +1083,34 @@ const provider = () => ({
         }
       }
 
+      // Probe FY spend fields — identify which Custom.PlannedSpendFYxx fields are missing.
+      // Missing fields means per-FY spend will not be written for those years.
+      // The table and summary banner continue to work regardless.
+      const missingFYFields: string[] = [];
+      try {
+        const fyRefs = Object.values(FY_SPEND_FIELDS);
+        const values = await workItemService.getFieldValues(fyRefs);
+        for (const [fy, ref] of Object.entries(FY_SPEND_FIELDS)) {
+          if (values[ref] === undefined) missingFYFields.push(`${fy} (${ref})`);
+        }
+      } catch {
+        // getFieldValues failure means none of the FY fields exist on this WIT
+        Object.entries(FY_SPEND_FIELDS).forEach(([fy, ref]) =>
+            missingFYFields.push(`${fy} (${ref})`)
+        );
+      }
+      if (missingFYFields.length > 0) {
+        // Show a non-blocking notice in the status bar for 6 seconds, then ready
+        const count = missingFYFields.length;
+        warn("onLoaded: missing FY spend fields:", missingFYFields.join(", "));
+        setStatus(
+            count === Object.keys(FY_SPEND_FIELDS).length
+                ? "FY spend fields not found — add Custom.PlannedSpendFY25-FY35 decimal fields to enable per-year reporting"
+                : `${count} FY spend field(s) missing — per-year reporting may be incomplete`
+        );
+        setTimeout(() => setStatus("Ready"), 6000);
+      }
+
       // Wire toolbar buttons
       document.getElementById("addRowBtn")?.addEventListener("click", addFiscalYear);
       document.getElementById("saveBtn")?.addEventListener("click", saveToField);
@@ -984,7 +1118,7 @@ const provider = () => ({
       await readCurrency();
       await loadFromField();
       resizeIframe();
-      setStatus("Ready");
+      if (missingFYFields.length === 0) setStatus("Ready");
     } catch (e: any) {
       const msg = e?.message ?? String(e);
       setStatus("Load error: " + msg);
