@@ -341,7 +341,7 @@ function renderSummary(summary: FinancialSummary): void {
 
   el.innerHTML = `
     <div class="fin-metric">
-      <span class="fin-label">Approved Budget</span>
+      <span class="fin-label">Estimated Cost</span>
       <span class="fin-value">${hasApproved ? fmtCurrency(summary.approvedBudget) : "Not set"}</span>
     </div>
     <div class="fin-metric">
