@@ -1,228 +1,211 @@
-# Financial Budget Table — Implementation Guide
+# ADO Epic Budget Table: Implementation Guide
+
 **Azure DevOps Work Item Form Control for PMO Epics**
 
 ---
 
 ## What this delivers
 
-Project and program managers open an Epic, go to the **Financials** tab, and see:
+Project and program managers open a PMO Epic, navigate to the **Budget** tab, and see:
 
 | Element | Description |
 |---|---|
-| **Summary banner** | Approved Budget · Total Planned Spend · Remaining · % of Budget with RAG progress bar |
-| **Editable grid** | One row per cost line — Fiscal Year, Cost Category, Expense Type (CapEx/OpEx), Q1–Q4 amounts, Notes |
-| **Footer totals** | Per-quarter totals + grand total, always in sync |
-| **Auto-save** | 300 ms debounce — no "Save" clicks required for normal use |
-| **Field writeback** | Computed values written to queryable Epic decimal fields on every change |
+| **Summary banner** | Estimated Cost, Total Committed Spend, Remaining, and % of Budget with a RAG progress bar |
+| **Transposed budget grid** | Fixed Q1/Q2/Q3/Q4 rows with one column per fiscal year and FY totals in the footer |
+| **Add FY / Delete** | Add a fiscal year as a new column or remove one. Columns are always ordered ascending. |
+| **Auto-save** | Edits are saved automatically with a 400ms debounce. No manual Save required for normal use. |
+| **Currency formatting** | Reads an ISO 4217 currency code from your Currency field. Supports USD, EUR, GBP, INR, JPY, and 15+ others. |
+| **Field writeback** | Computed KPIs are written back to queryable Epic decimal fields on every save. |
 
 ---
 
-## Part 1 — Create the Epic fields (Azure DevOps Admin, 20 min)
+## Part 1: Create the Epic fields (Admin, ~20 minutes)
 
-These fields must exist **before** configuring the extension control.
+These fields must exist on the PMO Epic work item type **before** you configure the extension control.
 
-### 1A — Storage field (holds the JSON rows)
+### 1A: JSON storage field
 
 | Setting | Value |
 |---|---|
-| Field type | **Text (multiple lines)** |
+| Field type | Text (multiple lines, Plain Text) |
 | Name | `Financials Table JSON` |
 | Reference name | `Custom.FinancialsTableJson` |
 
-- Add this field to the **Financials** page of the Epic layout.
-- Set it **hidden** from the layout (or place it in a collapsed group) — the control reads/writes it directly; users never see raw JSON.
+Add this field to the Budget page layout. Hide it from view or place it in a collapsed group. Users never interact with raw JSON directly. The extension reads and writes this field via the SDK.
 
-### 1B — Computed / queryable fields
+### 1B: Computed queryable fields
 
-Create each as **Decimal** type on the Epic:
+Create each field as **Decimal** type on the PMO Epic work item type:
 
-| Name | Reference Name | Purpose |
+| Display Name | Reference Name | Written by extension |
 |---|---|---|
-| Total Planned Spend | `Custom.TotalPlannedSpend` | Sum of all Q1–Q4 across all rows |
-| Budget Remaining | `Custom.BudgetRemaining` | Approved Budget − Total Planned |
-| Percent of Budget | `Custom.PercentOfBudget` | (Planned ÷ Approved) × 100 |
+| Total Committed Spend | `Custom.TotalPlannedSpend` | Sum of all Q1-Q4 amounts across all fiscal years |
+| Total Budget Remaining | `Custom.TotalBudgetRemaining` | Estimated Cost minus Total Committed Spend |
+| Percent of Budget | `Custom.PercentOfBudget` | (Committed Spend / Estimated Cost) x 100 |
 
-- Place these on the Financials page in a read-only group.
-- Mark them **read-only** in the process layout — the extension writes to them programmatically.
+Set these fields to read-only in the process layout, or hide them from the form. The extension attempts to enforce read-only via `setFieldOptions` on load. This call is best-effort and silently skips on Azure DevOps Server versions that do not implement the API. These fields are surfaced in the summary banner, not as editable form inputs.
 
-### 1C — Which field is "Approved Budget"?
+### 1C: Approved budget source
 
-Look at the image: the Budget page already has **Estimated Cost** (`Microsoft.VSTS.Scheduling.StoryPoints` alias differs per process — check your field's reference name in **Process → Fields**). You can reuse it or create a dedicated `Custom.ApprovedBudget` decimal field.
+The extension reads your existing **Estimated Cost** field (`Custom.EstimatedCost`) as the approved budget source. No additional field is required. If your process template uses a different field, specify its reference name in the Options panel.
 
-> **Recommended**: Reuse your existing **Estimated Cost** field as the Approved Budget source. It's already visible on the Budget page and queryable. No new field needed.
+### 1D: Currency field (optional)
+
+The extension reads the **Currency** field (`Custom.Currency`) to format all monetary values using the correct symbol. If the field contains `USD`, amounts display as `$`. If it contains `EUR`, amounts display as `€`. When the field is absent or empty, the extension defaults to USD.
 
 ---
 
-## Part 2 — Add the Financials page and control (Azure DevOps Admin, 10 min)
+## Part 2: Add the control to the Budget page (Admin, ~10 minutes)
 
-1. Go to **Organization Settings → Process → DAUT-GES-Agile-PPM-Process-Template → PMO Epic**.
-2. Click **New page** → name it `Financials`.
-3. On the Financials page, click **Add custom control**.
-4. Select **Financial Budget Table** (after publishing the extension in Part 4).
-5. In the control **Options panel**, configure these inputs:
+1. Go to **Organization Settings > Boards > Process > DAUT-GES-Agile-PPM-Process-Template > PMO Epic**.
+2. Open the **Budget** page, or create a new page named `Budget`.
+3. Select **Add custom control** and choose **ADO Epic Budget Table**.
+4. Select the control, open the **Options** tab, and configure the field references:
 
-| Input | Value |
+| Option | Value |
 |---|---|
 | JSON Storage Field | `Custom.FinancialsTableJson` |
-| Approved Budget Field | `Microsoft.VSTS.Scheduling.StoryPoints` *(or your reference name for Estimated Cost)* |
+| Approved Budget Field | `Custom.EstimatedCost` |
 | Total Planned Spend Field | `Custom.TotalPlannedSpend` |
-| Budget Remaining Field | `Custom.BudgetRemaining` |
+| Budget Remaining Field | `Custom.TotalBudgetRemaining` |
 | Percent of Budget Field | `Custom.PercentOfBudget` |
+| Currency Field | `Custom.Currency` (optional, defaults to USD if left blank) |
 
-6. Set the control **height** to `480` (or taller if your rows are many).
-7. Save. The Financials tab is live.
+5. Save the layout. The Budget tab is immediately available on all PMO Epics.
+
+> **Note on height:** The control defaults to 720px, which comfortably shows four to five fiscal year columns. Height is managed dynamically. The iframe measures actual rendered content and resizes after every render and work item save.
 
 ---
 
-## Part 3 — Code changes (Developer, 2–3 hours)
+## Part 3: How the extension works
 
-### Files changed from the original extension
-
-| File | Change summary |
-|---|---|
-| `src/index.ts` | **Full rewrite** — purpose-built for budget table; all generic config removed |
-| `src/index.html` | **Simplified** — removed tip hint, debug panel, and generic toolbar copy |
-| `src/styles.css` | **Streamlined** — removed Select2 styles and generic filter styles; added financial summary and footer totals styles |
-| `vss-extension.json` | **Updated** — new extension ID, description, and 4 financial field input properties |
-| `src/styles.css` dependency | **Removed** — `select2` import and dependency entirely removed |
-
-### Dependencies to remove
-
-In `package.json`, remove these:
-
-```json
-"select2": "^4.1.0-rc.0",
-"@types/select2": "^4.0.63"
-```
-
-In `src/index.ts`, remove this import (already done in the new file):
-
-```ts
-import "select2";
-import "select2/dist/css/select2.min.css";
-```
-
-Run `npm install` after updating `package.json`.
-
-### What the new `index.ts` does (architecture summary)
+### Initialization flow
 
 ```
 SDK.init / ready
   └─ provider.onLoaded()
-       ├─ readConfig()              reads 5 field refs from Options inputs
-       ├─ probeField()              finds the writable JSON storage field (handles Json/JSON casing)
-       ├─ loadFromField()           reads JSON → renderTable() → refreshSummary()
-       └─ wireButtons()             Add Row / Save buttons
+       ├─ readConfig()           reads 6 field refs from Options inputs
+       ├─ probeField()           resolves the JSON storage field (handles Json/JSON casing variants)
+       ├─ setFieldOptions()      marks computed fields read-only on the form (best-effort)
+       ├─ readCurrency()         reads Custom.Currency and caches the ISO code for the session
+       ├─ loadFromField()        reads JSON, calls renderTable() and renderSummary()
+       └─ wires Add FY and Save buttons
 
-User edits a cell
-  └─ markDirty() [300ms debounce]
-       ├─ setFieldValue(dataFieldRef, JSON)     auto-saves rows
-       ├─ computeFinancials(rows, approvedBudget)
-       ├─ renderSummary()           updates banner
-       ├─ updateFooterTotals()      updates tfoot row
-       └─ writeComputedFields()     setFieldValue × 3 computed fields
+User edits a cell or adds/removes a fiscal year column
+  └─ markDirty() [400ms debounce] -> runSave()
+       ├─ setFieldValue(dataFieldRef, JSON)        persists rows to the storage field
+       ├─ readApprovedBudget()                      reads Estimated Cost
+       ├─ computeFinancials(rows, approvedBudget)   pure function with no SDK dependencies
+       ├─ renderSummary()                            updates the banner
+       └─ writeComputedFields()                     calls setFieldValue for each of the 3 computed fields
 
 provider.onFieldChanged()
-  ├─ own echo on dataFieldRef       → skip (skipFieldChangeOnce guard)
-  ├─ own echo on computed fields    → skip (skipFieldChangeOnce guard)
-  └─ Approved Budget changed externally → refreshSummary() only (no writeback on external change)
+  ├─ echo from own writes        skipped via skipFieldChangeOnce counter
+  ├─ external JSON field change  calls loadFromField() to reload from another tab or user
+  ├─ Currency field changed      calls readCurrency() then refreshSummary()
+  └─ Estimated Cost changed      calls refreshSummary() only (no writeback on external change)
 ```
 
 ### Key design decisions
 
-**No column configuration JSON** — The financial schema is fixed (FY, Cost Category, Expense Type, Q1–Q4, Notes). Eliminating the `ColumnConfiguration` input removes the main source of user error and makes the control self-documenting. Other organizations that install this extension get the same schema automatically.
+**Transposed layout.** The grid uses fixed Q1-Q4 rows with fiscal years as columns. This makes year-over-year comparison immediate and removes the underutilized Notes column from the original design. FY totals in the footer provide per-year spend visibility at a glance.
 
-**No Select2** — The original extension used Select2 for filterable column dropdowns. The financial table has short, well-known lists (8 FYs, 6 cost categories, 2 expense types). Native `<select>` is faster, lighter, and equally usable.
+**No DataTables.** The table is rendered as a plain HTML table from data directly. This removes a 60KB dependency, eliminates up to 144 per-render event listener allocations, and allows full control over the transposed column structure that DataTables cannot produce natively.
 
-**No global search** — `searching: false` in DataTables. A financial budget grid has ≤ 50 rows in practice. The filter row complexity in the original extension is removed entirely.
+**Event delegation.** A single delegated handler on `#tableWrap` covers all cell inputs and delete buttons. Removing per-cell listeners eliminates allocation churn during rapid add and remove operations.
 
-**Computation is pure** — `computeFinancials(rows, approvedBudget)` has zero SDK dependencies. It's a plain function that can be unit tested with Jest.
+**Save concurrency guard.** `runSave()` enforces mutual exclusion via a `saving` flag with a queued follow-up. This prevents overlapping writes when the debounced auto-save and the explicit Save button fire in close succession.
 
-**Load does not write back** — On `onLoaded`, computed values are displayed in the UI but **not** written to Epic fields. This prevents the work item from being dirty-flagged every time a user opens it to view.
+**Pure financial computation.** `computeFinancials(rows, approvedBudget)` has no SDK dependencies and can be unit tested independently with Jest.
+
+**Load does not write back.** On `onLoaded`, computed values are displayed in the UI but not written to Epic fields. This prevents the work item from being marked dirty every time a user opens it to review budget data.
 
 ---
 
-## Part 4 — Build and publish (Developer, 30 min)
+## Part 4: Build and publish (Developer, ~30 minutes)
 
 ```bash
-# Install dependencies (after removing select2 from package.json)
+# Install dependencies
 npm install
 
-# Build production bundle
+# Build the production bundle
 npm run build
 
-# Package as .vsix
-npx tfx-cli extension create --manifest-globs vss-extension.json --rev-version
+# Package as .vsix (output goes to releases/)
+npm run package
 
-# Publish to your organization (private) — replace with your PAT
+# Publish to the Visual Studio Marketplace
 npx tfx-cli extension publish \
   --manifest-globs vss-extension.json \
-  --token YOUR_PAT_HERE
+  --token YOUR_MARKETPLACE_PAT
 ```
 
-After publishing, go to your Azure DevOps organization → **Organization Settings → Extensions** and confirm the extension is installed.
+Alternatively, use the Makefile to build, package, commit, tag, and push in a single step:
+
+```bash
+make release MSG="describe your changes here"
+```
+
+After publishing, verify the installed version in **Organization Settings > Extensions**.
 
 ---
 
-## Part 5 — Column schema reference
+## Part 5: Querying budget data
 
-The grid always renders these fixed columns in this order:
-
-| Column | Input type | Options / behavior |
-|---|---|---|
-| Fiscal Year | `<select>` | FY25–FY32; sorted ascending by default |
-| Cost Category | `<select>` | Labor, Materials & Supplies, Travel & Expenses, Contracts, Software, Other |
-| Type | `<select>` | CapEx, OpEx |
-| Q1 ($) | `<input type="number">` | Min 0, step 1,000; right-aligned |
-| Q2 ($) | `<input type="number">` | Same |
-| Q3 ($) | `<input type="number">` | Same |
-| Q4 ($) | `<input type="number">` | Same |
-| Notes | `<input type="text">` | Free text |
-| Actions | Delete button | Removes the row |
-
-To change the fiscal year list or cost categories in the future, update the `FISCAL_YEARS` and `COST_CATS` arrays at the top of `src/index.ts`. No Options configuration change needed.
-
----
-
-## Part 6 — Querying the data (WIQL / Analytics)
-
-Because computed values are written into native Epic decimal fields, PMOs can query without any custom tooling:
-
-**Example WIQL — Epics over 90% budget**
+Because computed values are written to native Epic decimal fields, you can query them directly in WIQL without Power BI or any external tooling:
 
 ```sql
-SELECT [System.Id], [System.Title], [Custom.TotalPlannedSpend],
-       [Custom.BudgetRemaining], [Custom.PercentOfBudget]
+SELECT [System.Id], [System.Title],
+       [Custom.TotalPlannedSpend],
+       [Custom.TotalBudgetRemaining],
+       [Custom.PercentOfBudget]
 FROM WorkItems
 WHERE [System.WorkItemType] = 'PMO Epic'
   AND [Custom.PercentOfBudget] >= 90
 ORDER BY [Custom.PercentOfBudget] DESC
 ```
 
-**Dashboard widget** — Add a **Work Item Query Chart** widget pointing to this query. No Power BI required.
-
-**Sprint / iteration rollup** — The fields work in the native Azure DevOps backlog rollup columns once added to the process.
+Add this query as a **Work Item Query Chart** widget to your Azure DevOps dashboard for at-a-glance portfolio budget health.
 
 ---
 
-## Part 7 — Extending to other organizations
+## Part 6: Supported currencies
 
-Because the extension uses the **Options panel** for all field references, any other organization that installs it only needs to:
+The extension reads the ISO 4217 code from `Custom.Currency` and maps it to the appropriate symbol:
 
-1. Create the five fields listed in Part 1 (or reuse existing ones with matching types).
-2. Add the control to their Epic layout.
-3. Configure the five field references in the Options panel.
+| Code | Symbol | Code | Symbol | Code | Symbol |
+|---|---|---|---|---|---|
+| USD | $ | EUR | € | GBP | £ |
+| INR | Rs | JPY | ¥ | CNY | ¥ |
+| CAD | CA$ | AUD | A$ | NZD | NZ$ |
+| HKD | HK$ | SGD | S$ | KRW | Rs |
+| BRL | R$ | MXN | MX$ | ZAR | R |
+| SEK | kr | NOK | kr | DKK | kr |
+| AED | AED | SAR | SAR | CHF | CHF |
 
-No code changes. The extension works as a generic financial budget table for any Azure DevOps organization running the same pattern.
+Codes not in this list display the raw code as a prefix (for example, `THB 55,000`). The extension defaults to USD when the field is empty or absent.
+
+---
+
+## Part 7: Extending to other organizations
+
+The extension uses the Options panel for all field references. To deploy to another organization:
+
+1. Create the fields described in Part 1, or reuse existing fields with compatible types.
+2. Add the control to the Epic layout.
+3. Configure the six field references in the Options panel.
+
+No code changes are required. The extension works as a generic quarterly budget planning control for any Azure DevOps organization.
 
 ---
 
 ## Troubleshooting
 
-| Symptom | Cause | Fix |
+| Symptom | Likely cause | Resolution |
 |---|---|---|
-| Summary shows "$0 Approved Budget" | Approved Budget field ref not configured or field is empty | Check Options → Approved Budget Field input |
-| "Field not writable" status | JSON storage field ref is wrong or field isn't on the work item form | Verify `Custom.FinancialsTableJson` exists on Epic and is on the Financials page |
-| Computed fields not updating | Total Spent / Remaining / Percent field refs not configured | Set all three in Options panel |
-| Extension height too small | Default 480px may clip on small screens | Increase `height` in Options or in `vss-extension.json` |
-| Rows disappear on refresh | JSON field is Html type and stripping content | Change field type to **Plain Text (multiple lines)** |
+| Banner shows "Not set" for Estimated Cost | The Approved Budget field ref is not configured, or `Custom.EstimatedCost` does not exist on the PMO Epic work item type. | Open Options and verify the Approved Budget Field value. Confirm the field exists under **Process > Fields**. |
+| Status bar shows "Field not writable" on load | The JSON storage field reference is incorrect, or the field is not present on the work item form. | Verify that `Custom.FinancialsTableJson` exists on the PMO Epic and is added to the Budget page layout. |
+| Computed fields are not updating | The Total Planned Spend, Budget Remaining, and Percent of Budget field refs are not configured. | Set all three reference names in the Options panel. |
+| Amounts show $ when currency is EUR | `Custom.Currency` is empty or the Currency Field option is not configured. | Set the Currency Field option to `Custom.Currency` in the Options panel. Confirm the field has a value on the Epic. |
+| Table is empty after save | The JSON storage field type is HTML rather than Plain Text. Azure DevOps strips content from HTML fields during save. | Change the field type to Plain Text (multiple lines). |
+| Data disappears on page refresh | The value in `Custom.FinancialsTableJson` is corrupted. | Open browser DevTools and filter the console for `[FIN]` to locate the parse error. |
