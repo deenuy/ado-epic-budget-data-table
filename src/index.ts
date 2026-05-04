@@ -311,13 +311,22 @@ function renderSummary(summary: FinancialSummary): void {
               : "rag-green";
   const barPct = hasApproved ? Math.min(pct, 100) : 0;
 
+  // Progress bar hint — differentiate between on-track, at-risk, and over-budget states
+  const progressLabel = !hasApproved
+      ? "Configure an Approved Budget field in control Options to see % of budget"
+      : summary.budgetRemaining < 0
+          ? `Over budget by ${fmtCurrency(Math.abs(summary.budgetRemaining))}`
+          : pct > 75
+              ? `${pct.toFixed(1)}% of budget used — ${fmtCurrency(summary.budgetRemaining)} remaining`
+              : `${pct.toFixed(1)}% of budget used`;
+
   el.innerHTML = `
     <div class="fin-metric">
-      <span class="fin-label">Estimated Cost</span>
+      <span class="fin-label">Approved Budget</span>
       <span class="fin-value">${hasApproved ? fmtCurrency(summary.approvedBudget) : "Not set"}</span>
     </div>
     <div class="fin-metric">
-      <span class="fin-label">Total Planned Spend</span>
+      <span class="fin-label">Total Committed Spend</span>
       <span class="fin-value">${fmtCurrency(summary.totalPlannedSpend)}</span>
     </div>
     <div class="fin-metric">
@@ -334,11 +343,7 @@ function renderSummary(summary: FinancialSummary): void {
       <div class="fin-progress-bar">
         <div class="fin-progress-fill ${ragClass}" style="width:${barPct}%"></div>
       </div>
-      <span class="fin-progress-label ${ragClass}">
-        ${hasApproved
-      ? pct.toFixed(1) + "% planned"
-      : "Configure Estimated Cost field in control Options to see % of budget"}
-      </span>
+      <span class="fin-progress-label ${ragClass}">${progressLabel}</span>
     </div>
   `;
   el.style.display = "flex";
