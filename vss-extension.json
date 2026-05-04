@@ -141,6 +141,23 @@
               "dataType": "String",
               "isRequired": false
             }
+          },
+          {
+            "id": "CurrencyFieldRef",
+            "name": "Currency Field",
+            "description": "Picklist or Text field holding the ISO 4217 currency code (e.g. USD, EUR, GBP). Defaults to Custom.Currency. Leave blank to use USD.",
+            "type": "WorkItemField",
+            "defaultValue": "",
+            "properties": {
+              "workItemFieldTypes": [
+                "String",
+                "PicklistString"
+              ]
+            },
+            "validation": {
+              "dataType": "String",
+              "isRequired": false
+            }
           }
         ]
       }

@@ -82,6 +82,8 @@ interface ExtensionConfig {
   totalSpentFieldRef:      string | null; // Optional — decimal field to write total spend
   budgetRemainingFieldRef: string | null; // Optional — decimal field to write remaining
   percentSpentFieldRef:    string | null; // Optional — decimal field to write % spent
+  /** Optional — Picklist/Text field holding the ISO currency code (e.g. USD, EUR, GBP). */
+  currencyFieldRef:        string | null;
 }
 
 /* ─────────────────────────────── Module state ─────────────────────────────── */
@@ -126,6 +128,12 @@ let currentRows: BudgetRow[] = [];
 /** Prevents duplicate listener wiring if onLoaded fires more than once. */
 let initialized = false;
 
+/**
+ * ISO 4217 currency code resolved from Custom.Currency at load time.
+ * Defaults to USD. Used to format all monetary values in the banner and table.
+ */
+let activeCurrencyCode = "USD";
+
 /** Active extension configuration. Populated in onLoaded from SDK witInputs. */
 let config: ExtensionConfig = {
   dataFieldRef:            "Custom.FinancialsTableJson",
@@ -133,6 +141,7 @@ let config: ExtensionConfig = {
   totalSpentFieldRef:      null,
   budgetRemainingFieldRef: null,
   percentSpentFieldRef:    null,
+  currencyFieldRef:        null,
 };
 
 /* ─────────────────────────────── Logging ─────────────────────────────── */
@@ -158,6 +167,7 @@ function readConfig(): ExtensionConfig {
     totalSpentFieldRef:      cfg.TotalSpentFieldRef?.trim()      || null,
     budgetRemainingFieldRef: cfg.BudgetRemainingFieldRef?.trim() || null,
     percentSpentFieldRef:    cfg.PercentSpentFieldRef?.trim()    || null,
+    currencyFieldRef:        cfg.CurrencyFieldRef?.trim()         || null,
   };
 }
 
@@ -236,9 +246,49 @@ const NF0 = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 /** Formats an integer as a US locale number string (e.g. 1234567 → "1,234,567"). */
 function fmt(n: number): string { return NF0.format(n); }
 
-/** Formats a number as a currency string, handling negatives (e.g. -500 → "-$500"). */
+/** Formats a number as a currency string using the active ISO currency code. */
 function fmtCurrency(n: number): string {
-  return (n < 0 ? "-$" : "$") + fmt(Math.abs(n));
+  const sym = currencySymbol(activeCurrencyCode);
+  return (n < 0 ? `-${sym}` : sym) + fmt(Math.abs(n));
+}
+
+/**
+ * Reads the currency code from the configured field (default: Custom.Currency).
+ * Falls back to "USD" if the field is not configured, empty, or unreadable.
+ * Called once in onLoaded and cached in activeCurrencyCode for the session.
+ */
+async function readCurrency(): Promise<void> {
+  if (!workItemService) return;
+  const ref = config.currencyFieldRef ?? "Custom.Currency";
+  try {
+    const values = await workItemService.getFieldValues([ref]);
+    const val    = values[ref];
+    if (val && typeof val === "string" && val.trim()) {
+      activeCurrencyCode = val.trim().toUpperCase();
+      log("readCurrency: resolved", ref, "=", activeCurrencyCode);
+    }
+  } catch {
+    log("readCurrency: field not found or unreadable:", ref, "— defaulting to USD");
+  }
+}
+
+/**
+ * Returns the currency symbol for an ISO 4217 code.
+ * Covers common currencies encountered in global enterprise PMO contexts.
+ * Falls back to the code itself (e.g. "CHF") for unlisted currencies.
+ *
+ * @param code - ISO 4217 currency code (e.g. "USD", "EUR")
+ */
+function currencySymbol(code: string): string {
+  const symbols: Record<string, string> = {
+    USD: "$",   CAD: "CA$", AUD: "A$",  NZD: "NZ$",
+    EUR: "€",   GBP: "£",   CHF: "CHF",
+    JPY: "¥",   CNY: "¥",   HKD: "HK$", SGD: "S$",  KRW: "₩",
+    INR: "₹",   BRL: "R$",  MXN: "MX$", ZAR: "R",
+    SEK: "kr",  NOK: "kr",  DKK: "kr",
+    AED: "AED", SAR: "SAR",
+  };
+  return symbols[code] ?? code;
 }
 
 /* ─────────────────────────────── Summary banner ─────────────────────────────── */
@@ -926,6 +976,7 @@ const provider = () => ({
       document.getElementById("addRowBtn")?.addEventListener("click", addFiscalYear);
       document.getElementById("saveBtn")?.addEventListener("click", saveToField);
 
+      await readCurrency();
       await loadFromField();
       resizeIframe();
       setStatus("Ready");
@@ -973,7 +1024,14 @@ const provider = () => ({
       return;
     }
 
-    // Step 3 — Estimated Cost changed externally — update the banner immediately
+    // Step 3 — Currency field changed externally — re-read symbol and refresh banner
+    const currencyRef = config.currencyFieldRef ?? "Custom.Currency";
+    if (changed[currencyRef] !== undefined) {
+      await readCurrency();
+      void refreshSummary();
+    }
+
+    // Step 4 — Estimated Cost changed externally — update the banner immediately
     if (config.approvedBudgetFieldRef && changed[config.approvedBudgetFieldRef] !== undefined) {
       cachedApprovedBudget = Number(changed[config.approvedBudgetFieldRef]) || 0;
       await refreshSummary();
@@ -1016,4 +1074,4 @@ const provider = () => ({
 /* ─────────────────────────────── Bootstrap ─────────────────────────────── */
 
 SDK.init();
-SDK.ready().then(() => SDK.register(SDK.getContributionId(), provider));
+void SDK.ready().then(() => SDK.register(SDK.getContributionId(), provider));
