@@ -20,7 +20,7 @@
 
 Project managers in Azure DevOps have no native way to plan and track budget spend by fiscal year and quarter on an Epic. The typical workarounds (Excel files, SharePoint lists, Power BI datasets) live outside the work item, break traceability, and require separate maintenance.
 
-This extension adds a **Budget tab** directly to any PMO Epic. Budget data is entered once, computed automatically, and stored in native Azure DevOps fields, making them immediately available for WIQL queries, dashboard widgets, and portfolio reporting with no external tooling.
+This extension adds a **Budget tab** directly to any Epic. Budget data is entered once, computed automatically, and stored in native Azure DevOps fields. This makes the data immediately available for WIQL queries, dashboard widgets, and portfolio reporting with no external tooling.
 
 ---
 
@@ -28,7 +28,7 @@ This extension adds a **Budget tab** directly to any PMO Epic. Budget data is en
 
 | Capability | Business value |
 |---|---|
-| **Quarterly budget planning** | Plan spend across Q1-Q4 for each fiscal year in a single, structured view. No spreadsheets to maintain separately. |
+| **Quarterly budget planning** | Plan spend across Q1 to Q4 for each fiscal year in a single, structured view. No spreadsheets to maintain separately. |
 | **Instant budget health visibility** | A colour-coded summary banner shows Approved Budget, Total Committed Spend, Remaining, and % of Budget. Over-budget Epics are flagged immediately with the exact overage amount. |
 | **Portfolio reporting without Power BI** | Computed values are written to queryable Epic fields on every save. Use them in WIQL queries and Azure DevOps dashboard widgets across the portfolio. |
 | **Year-over-year spend analysis** | Per-fiscal-year spend is stored in individual fields (FY25 through FY35), enabling trend analysis and multi-year comparisons directly in Azure DevOps. |
@@ -47,14 +47,16 @@ Install from the [Visual Studio Marketplace](https://marketplace.visualstudio.co
 
 In **Organization Settings > Process > [Your Process] > PMO Epic**, create these fields:
 
-| Field Name | Type | Reference Name |
-|---|---|---|
-| Financials Table JSON | Text (multiple lines, Plain Text) | `Custom.FinancialsTableJson` |
-| Total Committed Spend | Decimal | `Custom.TotalPlannedSpend` |
-| Total Budget Remaining | Decimal | `Custom.TotalBudgetRemaining` |
-| Percent of Budget | Decimal | `Custom.PercentOfBudget` |
+| Field Name | Reference Name | Data Type | Required? |
+|---|---|---|---|
+| Financials Table JSON | `Custom.FinancialsTableJson` | Text (Multiple Lines, Plain Text) | **Yes** |
+| Estimated Cost | `Custom.EstimatedCost` | Decimal | Optional (Maps Approved Budget) |
+| Total Committed Spend | `Custom.TotalPlannedSpend` | Decimal | Optional |
+| Total Budget Remaining | `Custom.TotalBudgetRemaining` | Decimal | Optional |
+| Percent of Budget | `Custom.PercentOfBudget` | Decimal | Optional |
+| Currency | `Custom.Currency` | Text (Single Line) | Optional (Defaults to USD) |
 
-> **Tip:** The extension reads your existing Estimated Cost field (`Custom.EstimatedCost`) as the Approved Budget. No new field needed for that.
+> **Tip:** The extension reads your existing Estimated Cost field (`Custom.EstimatedCost`) as the Approved Budget. No new field is needed if it is already present.
 
 ### 3. Add the control to your Epic layout
 
@@ -71,7 +73,7 @@ In **Organization Settings > Process > [Your Process] > PMO Epic**, create these
 | Total Planned Spend Field | `Custom.TotalPlannedSpend` |
 | Budget Remaining Field | `Custom.TotalBudgetRemaining` |
 | Percent of Budget Field | `Custom.PercentOfBudget` |
-| Currency Field | `Custom.Currency` (optional, defaults to USD) |
+| Currency Field | `Custom.Currency` |
 
 ### 5. Open any PMO Epic
 
@@ -115,7 +117,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full development guide.
 
 ## Roadmap
 
-- [ ] Actuals columns (Q1-Q4 Actual vs Planned variance per fiscal year)
+- [ ] Actuals columns (Q1 to Q4 Actual vs Planned variance per fiscal year)
 - [ ] Export budget table to CSV
 - [ ] Portfolio rollup dashboard widget to aggregate spend across Epics
 - [ ] Lock rows by Epic state (read-only when Approved)
@@ -144,8 +146,8 @@ Read the [Contributing Guide](CONTRIBUTING.md) to get started.
 Built by **Deenu Gengiti**
 
 If this saves your team time:
-- Star the repo. It helps others find it.
-- Leave a review on the [VS Marketplace](https://marketplace.visualstudio.com/items?itemName=deenuy.ado-epic-budget-data-table)
-- File issues. Every bug report makes the extension better.
+*   Star the repo. It helps others find it.
+*   Leave a review on the [VS Marketplace](https://marketplace.visualstudio.com/items?itemName=deenuy.ado-epic-budget-data-table)
+*   File issues. Every bug report makes the extension better.
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?logo=linkedin)](https://linkedin.com/in/deenuy)
