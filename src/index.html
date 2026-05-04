@@ -1,40 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <title>Financial Budget Table</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-  </head>
-  <body>
-    <div id="app" class="azdo-card">
+<head>
+  <meta charset="utf-8" />
+  <title>Financial Budget Table</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+<div id="app" class="azdo-card">
 
-      <!-- ── Header ── -->
-      <div class="azdo-card-header">
-        <h3 class="azdo-title">Budget Plan</h3>
-        <div class="azdo-toolbar">
-          <button id="addRowBtn" type="button" class="azdo-btn">
-            <span class="bowtie-icon bowtie-math-plus"></span>
-            <span>Add Row</span>
-          </button>
-          <button id="saveBtn" type="button" class="azdo-btn azdo-btn-primary">
-            <span class="bowtie-icon bowtie-save"></span>
-            <span>Save</span>
-          </button>
-          <span id="status" class="azdo-status"></span>
-        </div>
-      </div>
-
-      <!-- ── Financial Summary Banner (hidden until data loads) ── -->
-      <div id="financialSummary" class="fin-summary" style="display:none;"></div>
-
-      <!-- ── Budget Table ── -->
-      <div class="azdo-table-wrap">
-        <table id="gridTable" class="display compact azdo-table" style="width:100%">
-          <thead></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
+  <!-- ── Header ── -->
+  <div class="azdo-card-header">
+    <h3 class="azdo-title">Budget Plan</h3>
+    <div class="azdo-toolbar">
+      <button id="addRowBtn" type="button" class="azdo-btn">
+        <span class="bowtie-icon bowtie-math-plus"></span>
+        <span>Add FY</span>
+      </button>
+      <button id="saveBtn" type="button" class="azdo-btn azdo-btn-primary">
+        <span class="bowtie-icon bowtie-save"></span>
+        <span>Save</span>
+      </button>
+      <span id="status" class="azdo-status"></span>
     </div>
-  </body>
+  </div>
+
+  <!-- ── Financial Summary Banner (hidden until data loads) ── -->
+  <div id="financialSummary" class="fin-summary" style="display:none;"></div>
+
+  <!-- ── Budget Table — rendered dynamically by index.ts ── -->
+  <div class="azdo-table-wrap">
+    <div id="tableWrap"></div>
+  </div>
+
+</div>
+</body>
 </html>
